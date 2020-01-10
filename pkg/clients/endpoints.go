@@ -48,7 +48,7 @@ func MakeAuthorizeEndpoint(c ClientsService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req, ok := request.(AuthorizeRequest)
 		if !ok {
-			return "", ErrInvalidRequestStructure{}
+			return AuthorizeResponse{}, ErrInvalidRequestStructure{}
 		}
 
 		token, err := c.Authorize(ctx, req.User, req.Password)
@@ -60,7 +60,7 @@ func MakeValidateEndpoint(c ClientsService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req, ok := request.(ValidateRequest)
 		if !ok {
-			return "", ErrInvalidRequestStructure{}
+			return ValidateResponse{}, ErrInvalidRequestStructure{}
 		}
 
 		user, err := c.Validate(ctx, req.Token)

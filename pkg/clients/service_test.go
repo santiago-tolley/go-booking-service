@@ -51,7 +51,7 @@ func TestAuthorize(t *testing.T) {
 	for _, testcase := range authorizeTest {
 		t.Logf(testcase.name)
 
-		c := ClientsService{token.JWTEncoder{}, testcase.users}
+		c := clientsService{token.JWTEncoder{}, testcase.users}
 		result, err := c.Authorize(context.Background(), testcase.user, testcase.password)
 
 		if !((result != "" && testcase.want != "") || (result == testcase.want)) {
@@ -105,7 +105,7 @@ func TestValidate(t *testing.T) {
 	for _, testcase := range validateTest {
 		t.Logf(testcase.name)
 
-		c := ClientsService{token.JWTEncoder{}, testcase.users}
+		c := clientsService{token.JWTEncoder{}, testcase.users}
 		result, err := c.Validate(context.Background(), testcase.token)
 
 		if result != testcase.want {

@@ -5,7 +5,12 @@ import (
 	"time"
 )
 
-type ClientsService struct {
+type ClientsService interface {
+	Authorize(context.Context, string, string) (string, error)
+	Validate(context.Context, string) (string, error)
+}
+
+type clientsService struct {
 	encoder EncoderDecoder
 	users   map[string]string
 }
@@ -16,10 +21,10 @@ type EncoderDecoder interface {
 }
 
 func NewClientsServer(e EncoderDecoder, users map[string]string) ClientsService {
-	return ClientsService{e, users}
+	return clientsService{e, users}
 }
 
-func (c ClientsService) Authorize(ctx context.Context, user, password string) (string, error) {
+func (c clientsService) Authorize(ctx context.Context, user, password string) (string, error) {
 	if c.users[user] != password {
 		return "", ErrInvalidCredentials{}
 	}
@@ -32,7 +37,7 @@ func (c ClientsService) Authorize(ctx context.Context, user, password string) (s
 	return token, nil
 }
 
-func (c ClientsService) Validate(ctx context.Context, token string) (string, error) {
+func (c clientsService) Validate(ctx context.Context, token string) (string, error) {
 	user, err := c.encoder.Decode(token, "very_safe")
 
 	if _, ok := c.users[user]; !ok {
