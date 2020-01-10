@@ -145,7 +145,6 @@ func TestDecodeGRPCAuthorizeResponse(t *testing.T) {
 	}
 }
 
-///
 var decodeGRPCValidateResponseTest = []struct {
 	name    string
 	request interface{}

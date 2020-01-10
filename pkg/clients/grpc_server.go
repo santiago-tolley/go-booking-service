@@ -30,7 +30,7 @@ func NewGRPCServer(endpoints Endpoints) *GrpcServer {
 func (s *GrpcServer) Authorize(ctx context.Context, req *pb.AuthorizeRequest) (*pb.AuthorizeResponse, error) {
 	_, resp, err := s.authorize.ServeGRPC(ctx, req)
 	if err != nil {
-		return nil, err
+		return &pb.AuthorizeResponse{}, err
 	}
 	response, ok := resp.(*pb.AuthorizeResponse)
 	if !ok {
@@ -42,7 +42,7 @@ func (s *GrpcServer) Authorize(ctx context.Context, req *pb.AuthorizeRequest) (*
 func (s *GrpcServer) Validate(ctx context.Context, req *pb.ValidateRequest) (*pb.ValidateResponse, error) {
 	_, resp, err := s.validate.ServeGRPC(ctx, req)
 	if err != nil {
-		return nil, err
+		return &pb.ValidateResponse{}, err
 	}
 	response, ok := resp.(*pb.ValidateResponse)
 	if !ok {
