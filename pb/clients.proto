@@ -1,0 +1,26 @@
+syntax = "proto3";
+package pb;
+
+service Clients {
+    rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse) {};
+    rpc Validate(ValidateRequest) returns (ValidateResponse) {};
+}
+
+message AuthorizeRequest {
+    string user = 1;
+    string password = 2;
+}
+
+message AuthorizeResponse {
+    string token = 1;
+    string error = 2;
+}
+
+message ValidateRequest {
+    string token = 1;
+}
+
+message ValidateResponse {
+    string user = 1;
+    string error = 2;
+}
