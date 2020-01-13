@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"go-booking-service/pb"
+	"go-booking-service/pkg/clients"
 	"go-booking-service/pkg/rooms"
 
 	kitlog "github.com/go-kit/kit/log"
@@ -18,12 +19,18 @@ import (
 
 func main() {
 	grpcAddr := ":8081"
+	clientGrpcAddr := ":8082"
 
 	logger := kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stdout))
 	errLogger := kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stderr))
 
+	clientGRPCconn, err := grpc.Dial(clientGrpcAddr, grpc.WithInsecure())
+	if err != nil {
+		errLogger.Log("transport", "gRPC", "message", "could not connect to clients service", "error", err)
+	}
+
 	var (
-		service    = rooms.NewRoomsServer()
+		service    = rooms.NewRoomsServer(clients.NewGRPCClient(clientGRPCconn))
 		endpoints  = rooms.MakeEndpoints(service)
 		grpcServer = rooms.NewGRPCServer(endpoints)
 	)
