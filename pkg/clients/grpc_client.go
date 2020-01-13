@@ -79,8 +79,18 @@ func decodeGRPCValidateResponse(_ context.Context, grpcReply interface{}) (inter
 }
 
 func str2err(s string) error {
-	if s == "" {
+	switch s {
+	case "":
 		return nil
+	case ErrInvalidRequestStructure{}.Error():
+		return ErrInvalidRequestStructure{}
+	case ErrInvalidResponseStructure{}.Error():
+		return ErrInvalidResponseStructure{}
+	case ErrInvalidToken{}.Error():
+		return ErrInvalidToken{}
+	case ErrUserNotFound{}.Error():
+		return ErrUserNotFound{}
+	default:
+		return errors.New(s)
 	}
-	return errors.New(s)
 }

@@ -77,9 +77,17 @@ func decodeGRPCCheckResponse(_ context.Context, grpcReply interface{}) (interfac
 	}, nil
 }
 
-func str2err(s string) error { // todo
-	if s == "" {
+func str2err(s string) error {
+	switch s {
+	case "":
 		return nil
+	case ErrInvalidRequestStructure{}.Error():
+		return ErrInvalidRequestStructure{}
+	case ErrInvalidResponseStructure{}.Error():
+		return ErrInvalidResponseStructure{}
+	case ErrNoRoomAvailable{}.Error():
+		return ErrNoRoomAvailable{}
+	default:
+		return errors.New(s)
 	}
-	return errors.New(s)
 }
