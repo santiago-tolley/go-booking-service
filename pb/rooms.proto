@@ -1,0 +1,26 @@
+syntax = "proto3";
+package pb;
+
+service Rooms {
+    rpc Book (BookRequest) returns (BookResponse) {};
+    rpc Check (CheckRequest) returns (CheckResponse) {};
+}
+
+message BookRequest {
+    string token = 1;
+    int64 date = 2;
+}
+
+message BookResponse {
+    int64 id = 1;
+    string error = 2;
+}
+
+message CheckRequest {
+    int64 date = 1;
+}
+
+message CheckResponse {
+    int64 available = 1;
+    string error = 2;
+}
