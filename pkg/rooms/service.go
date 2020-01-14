@@ -15,17 +15,17 @@ type Validator interface {
 	Validate(context.Context, string) (string, error)
 }
 
-func NewRoomsServer(validator Validator) RoomsService {
-	return roomsService{[]room{}, validator}
+func NewRoomsServer(rooms []Room, validator Validator) RoomsService {
+	return roomsService{rooms, validator}
 }
 
-type room struct {
-	book map[time.Time]string
-	mux  *sync.Mutex
+type Room struct {
+	Book map[time.Time]string
+	Mux  *sync.Mutex
 }
 
 type roomsService struct {
-	rooms     []room
+	rooms     []Room
 	validator Validator
 }
 
@@ -42,19 +42,19 @@ func (r roomsService) Book(ctx context.Context, token string, date time.Time) (i
 
 	var booked bool
 	for id, room := range r.rooms {
-		if room.book[date] == "" {
-			room.mux.Lock()
-			if room.book[date] == "" {
-				room.book[date] = user
+		if room.Book[date] == "" {
+			room.Mux.Lock()
+			if room.Book[date] == "" {
+				room.Book[date] = user
 				booked = true
 			}
-			room.mux.Unlock()
+			room.Mux.Unlock()
 			if booked {
 				return id + 1, nil
 			}
 		}
 	}
-	return 0, ErrNoRoomAvailable{}
+	return 0, ErrNoRoomAvailable()
 }
 
 // Returns the number of available rooms for a date (read/non-blocking)
@@ -62,7 +62,7 @@ func (r roomsService) Check(ctx context.Context, date time.Time) (int, error) {
 
 	var count int
 	for _, room := range r.rooms {
-		if room.book[date] == "" {
+		if room.Book[date] == "" {
 			count++
 		}
 	}

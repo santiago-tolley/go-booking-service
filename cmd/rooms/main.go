@@ -5,8 +5,11 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
+	"time"
 
+	"go-booking-service/commons"
 	"go-booking-service/pb"
 	"go-booking-service/pkg/clients"
 	"go-booking-service/pkg/rooms"
@@ -18,8 +21,8 @@ import (
 )
 
 func main() {
-	grpcAddr := ":8081"
-	clientGrpcAddr := ":8082"
+	grpcAddr := commons.RoomsGrpcAddr
+	clientGrpcAddr := commons.ClientsGrpcAddr
 
 	logger := kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stdout))
 	errLogger := kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stderr))
@@ -29,8 +32,23 @@ func main() {
 		errLogger.Log("transport", "gRPC", "message", "could not connect to clients service", "error", err)
 	}
 
+	roomsCollection := []rooms.Room{
+		{
+			map[time.Time]string{},
+			&sync.Mutex{},
+		},
+		{
+			map[time.Time]string{},
+			&sync.Mutex{},
+		},
+		{
+			map[time.Time]string{},
+			&sync.Mutex{},
+		},
+	}
+
 	var (
-		service    = rooms.NewRoomsServer(clients.NewGRPCClient(clientGRPCconn))
+		service    = rooms.NewRoomsServer(roomsCollection, clients.NewGRPCClient(clientGRPCconn))
 		endpoints  = rooms.MakeEndpoints(service)
 		grpcServer = rooms.NewGRPCServer(endpoints)
 	)

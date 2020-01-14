@@ -2,6 +2,7 @@ package clients
 
 import (
 	"context"
+	"go-booking-service/commons"
 	"time"
 )
 
@@ -26,11 +27,10 @@ func NewClientsServer(e EncoderDecoder, users map[string]string) ClientsService 
 
 func (c clientsService) Authorize(ctx context.Context, user, password string) (string, error) {
 	if c.users[user] != password {
-		return "", ErrInvalidCredentials{}
+		return "", ErrInvalidCredentials()
 	}
 
-	token, err := c.encoder.Encode(user, "very_safe", time.Now().Local().Add(5*time.Minute))
-
+	token, err := c.encoder.Encode(user, commons.JWTSecret, time.Now().Local().Add(commons.JWTExpiration))
 	if err != nil {
 		return "", err
 	}
@@ -38,10 +38,12 @@ func (c clientsService) Authorize(ctx context.Context, user, password string) (s
 }
 
 func (c clientsService) Validate(ctx context.Context, token string) (string, error) {
-	user, err := c.encoder.Decode(token, "very_safe")
-
+	user, err := c.encoder.Decode(token, commons.JWTSecret)
+	if err != nil {
+		return "", err
+	}
 	if _, ok := c.users[user]; !ok {
-		return "", ErrUserNotFound{user}
+		return "", ErrUserNotFound()
 	}
 
 	return user, err

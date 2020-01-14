@@ -34,13 +34,13 @@ func (a grpcValidateWrongResponseMock) ServeGRPC(ctx context.Context, request in
 type grpcAuthorizeErrorMock struct{}
 
 func (a grpcAuthorizeErrorMock) ServeGRPC(ctx context.Context, request interface{}) (context.Context, interface{}, error) {
-	return ctx, &pb.AuthorizeResponse{}, ErrInvalidCredentials{}
+	return ctx, &pb.AuthorizeResponse{}, ErrInvalidCredentials()
 }
 
 type grpcValidateErrorMock struct{}
 
 func (a grpcValidateErrorMock) ServeGRPC(ctx context.Context, request interface{}) (context.Context, interface{}, error) {
-	return ctx, &pb.ValidateResponse{}, ErrInvalidToken{}
+	return ctx, &pb.ValidateResponse{}, ErrInvalidToken()
 }
 
 var grpcServerAuthorizeTest = []struct {
@@ -67,7 +67,7 @@ var grpcServerAuthorizeTest = []struct {
 		},
 		request: &pb.AuthorizeRequest{},
 		want:    &pb.AuthorizeResponse{},
-		err:     ErrInvalidCredentials{},
+		err:     ErrInvalidCredentials(),
 	},
 	{
 		name: "should return en error if the ServeGRPC response is the wrong type",
@@ -77,7 +77,7 @@ var grpcServerAuthorizeTest = []struct {
 		},
 		request: &pb.AuthorizeRequest{},
 		want:    &pb.AuthorizeResponse{},
-		err:     ErrInvalidResponseStructure{},
+		err:     ErrInvalidResponseStructure(),
 	},
 }
 
@@ -94,15 +94,12 @@ func TestGRPCServerAuthorize(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrInvalidCredentials:
-			_, ok = err.(ErrInvalidCredentials)
-		case ErrInvalidResponseStructure:
-			_, ok = err.(ErrInvalidResponseStructure)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)
@@ -134,7 +131,7 @@ var grpcServerValidateTest = []struct {
 		},
 		request: &pb.ValidateRequest{},
 		want:    &pb.ValidateResponse{},
-		err:     ErrInvalidToken{},
+		err:     ErrInvalidToken(),
 	},
 	{
 		name: "should return en error if the ServeGRPC response is the wrong type",
@@ -144,7 +141,7 @@ var grpcServerValidateTest = []struct {
 		},
 		request: &pb.ValidateRequest{},
 		want:    &pb.ValidateResponse{},
-		err:     ErrInvalidResponseStructure{},
+		err:     ErrInvalidResponseStructure(),
 	},
 }
 
@@ -161,15 +158,12 @@ func TestGRPCServerValidate(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrInvalidToken:
-			_, ok = err.(ErrInvalidToken)
-		case ErrInvalidResponseStructure:
-			_, ok = err.(ErrInvalidResponseStructure)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)
@@ -192,7 +186,7 @@ var decodeGRPCAuthorizeRequestTest = []struct {
 		name:    "should return an error if the request has the wrong structure",
 		request: "jjj.www.ttt",
 		want:    AuthorizeRequest{},
-		err:     ErrInvalidRequestStructure{},
+		err:     ErrInvalidRequestStructure(),
 	},
 }
 
@@ -209,13 +203,12 @@ func TestDecodeGRPCAuthorizeRequest(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrInvalidRequestStructure:
-			_, ok = err.(ErrInvalidRequestStructure)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)
@@ -238,7 +231,7 @@ var decodeGRPCValidateRequestTest = []struct {
 		name:    "should return an error if the request has the wrong structure",
 		request: "Jhon",
 		want:    ValidateRequest{},
-		err:     ErrInvalidRequestStructure{},
+		err:     ErrInvalidRequestStructure(),
 	},
 }
 
@@ -255,13 +248,12 @@ func TestDecodeGRPCValidateRequest(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrInvalidRequestStructure:
-			_, ok = err.(ErrInvalidRequestStructure)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)
@@ -284,7 +276,7 @@ var encodeGRPCAuthorizeResponseTest = []struct {
 		name:    "should return an error if the request has the wrong structure",
 		request: "jjj.www.ttt",
 		want:    &pb.AuthorizeResponse{},
-		err:     ErrInvalidResponseStructure{},
+		err:     ErrInvalidResponseStructure(),
 	},
 }
 
@@ -301,13 +293,12 @@ func TestEncodeGRPCAuthorizeResponse(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrInvalidResponseStructure:
-			_, ok = err.(ErrInvalidResponseStructure)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)
@@ -330,7 +321,7 @@ var encodeGRPCValidateResponseTest = []struct {
 		name:    "should return an error if the request has the wrong structure",
 		request: "John",
 		want:    &pb.ValidateResponse{},
-		err:     ErrInvalidResponseStructure{},
+		err:     ErrInvalidResponseStructure(),
 	},
 }
 
@@ -347,13 +338,12 @@ func TestEncodeGRPCValidateResponse(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrInvalidResponseStructure:
-			_, ok = err.(ErrInvalidResponseStructure)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)

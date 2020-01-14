@@ -33,17 +33,17 @@ var endpointAuthorizeTest = []struct {
 			return "jjj.www.ttt", nil
 		},
 		want: "",
-		err:  ErrInvalidResponseStructure{},
+		err:  ErrInvalidResponseStructure(),
 	},
 	{
 		name:     "should return an error if the endpoint returns an error",
 		user:     "Jhon",
 		password: "pass",
 		authorizeEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return nil, ErrInvalidCredentials{}
+			return nil, ErrInvalidCredentials()
 		},
 		want: "",
-		err:  ErrInvalidCredentials{},
+		err:  ErrInvalidCredentials(),
 	},
 }
 
@@ -63,15 +63,12 @@ func TestEndpointAuthorize(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrInvalidResponseStructure:
-			_, ok = err.(ErrInvalidResponseStructure)
-		case ErrInvalidCredentials:
-			_, ok = err.(ErrInvalidCredentials)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)
@@ -101,16 +98,16 @@ var endpointValidateTest = []struct {
 			return "Jhon", nil
 		},
 		want: "",
-		err:  ErrInvalidResponseStructure{},
+		err:  ErrInvalidResponseStructure(),
 	},
 	{
 		name:  "should return an error if the endpoint returns an error",
 		token: "jjj.www.ttt",
 		validateEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return nil, ErrUserNotFound{}
+			return nil, ErrUserNotFound()
 		},
 		want: "",
-		err:  ErrUserNotFound{},
+		err:  ErrUserNotFound(),
 	},
 }
 
@@ -130,17 +127,12 @@ func TestEndpointValidate(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrInvalidToken:
-			_, ok = err.(ErrInvalidToken)
-		case ErrInvalidResponseStructure:
-			_, ok = err.(ErrInvalidResponseStructure)
-		case ErrUserNotFound:
-			_, ok = err.(ErrUserNotFound)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)
@@ -161,11 +153,11 @@ func (m mockCorrectClientsService) Validate(ctx context.Context, token string) (
 type mockErrorClientsService struct{}
 
 func (m mockErrorClientsService) Authorize(ctx context.Context, user, password string) (string, error) {
-	return "", ErrInvalidCredentials{}
+	return "", ErrInvalidCredentials()
 }
 
 func (m mockErrorClientsService) Validate(ctx context.Context, token string) (string, error) {
-	return "", ErrUserNotFound{}
+	return "", ErrUserNotFound()
 }
 
 var makeAuthorizeEndpointTest = []struct {
@@ -185,13 +177,13 @@ var makeAuthorizeEndpointTest = []struct {
 		name:    "should return an error if the request has the wrong structure",
 		client:  mockCorrectClientsService{},
 		request: "Jhon",
-		err:     ErrInvalidRequestStructure{},
+		err:     ErrInvalidRequestStructure(),
 	},
 	{
 		name:    "should return an error if the endpoint returns an error",
 		client:  mockErrorClientsService{},
 		request: AuthorizeRequest{},
-		want:    AuthorizeResponse{"", ErrInvalidCredentials{}},
+		want:    AuthorizeResponse{"", ErrInvalidCredentials()},
 	},
 }
 
@@ -209,15 +201,12 @@ func TestMakeAuthorizeEndpoint(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrInvalidRequestStructure:
-			_, ok = err.(ErrInvalidRequestStructure)
-		case ErrInvalidCredentials:
-			_, ok = err.(ErrInvalidCredentials)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)
@@ -242,13 +231,13 @@ var makeValidateEndpointTest = []struct {
 		name:    "should return an error if the request has the wrong structure",
 		client:  mockCorrectClientsService{},
 		request: "jjj.www.ttt",
-		err:     ErrInvalidRequestStructure{},
+		err:     ErrInvalidRequestStructure(),
 	},
 	{
 		name:    "should return an error if the endpoint returns an error",
 		client:  mockErrorClientsService{},
 		request: ValidateRequest{},
-		want:    ValidateResponse{"", ErrUserNotFound{}},
+		want:    ValidateResponse{"", ErrUserNotFound()},
 	},
 }
 
@@ -266,15 +255,12 @@ func TestMakeValidateEndpoint(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrInvalidRequestStructure:
-			_, ok = err.(ErrInvalidRequestStructure)
-		case ErrUserNotFound:
-			_, ok = err.(ErrUserNotFound)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)

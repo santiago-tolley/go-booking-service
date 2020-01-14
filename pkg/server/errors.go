@@ -1,9 +1,8 @@
-package rooms
+package server
 
 const (
 	InvalidRequestStructure  = "Invalid request structure"
 	InvalidResponseStructure = "Invalid response structure"
-	NoRoomAvailable          = "No room available"
 )
 
 type ErrorWithMsg struct {
@@ -20,8 +19,4 @@ func ErrInvalidRequestStructure() error {
 
 func ErrInvalidResponseStructure() error {
 	return ErrorWithMsg{InvalidResponseStructure}
-}
-
-func ErrNoRoomAvailable() error {
-	return ErrorWithMsg{NoRoomAvailable}
 }

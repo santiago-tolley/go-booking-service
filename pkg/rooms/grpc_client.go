@@ -2,7 +2,6 @@ package rooms
 
 import (
 	"context"
-	"errors"
 	"go-booking-service/pb"
 
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -37,7 +36,7 @@ func NewGRPCClient(conn *grpc.ClientConn) Endpoints {
 func encodeGRPCBookRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req, ok := request.(BookRequest)
 	if !ok {
-		return &pb.BookRequest{}, ErrInvalidRequestStructure{}
+		return &pb.BookRequest{}, ErrInvalidRequestStructure()
 	}
 	return &pb.BookRequest{
 		Token: req.Token,
@@ -48,7 +47,7 @@ func encodeGRPCBookRequest(_ context.Context, request interface{}) (interface{},
 func decodeGRPCBookResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply, ok := grpcReply.(*pb.BookResponse)
 	if !ok {
-		return BookResponse{}, ErrInvalidResponseStructure{}
+		return BookResponse{}, ErrInvalidResponseStructure()
 	}
 	return BookResponse{
 		Id:  int(reply.Id),
@@ -59,7 +58,7 @@ func decodeGRPCBookResponse(_ context.Context, grpcReply interface{}) (interface
 func encodeGRPCCheckRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req, ok := request.(CheckRequest)
 	if !ok {
-		return &pb.CheckRequest{}, ErrInvalidRequestStructure{}
+		return &pb.CheckRequest{}, ErrInvalidRequestStructure()
 	}
 	return &pb.CheckRequest{
 		Date: req.Date.Unix(),
@@ -69,7 +68,7 @@ func encodeGRPCCheckRequest(_ context.Context, request interface{}) (interface{}
 func decodeGRPCCheckResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply, ok := grpcReply.(*pb.CheckResponse)
 	if !ok {
-		return CheckResponse{}, ErrInvalidResponseStructure{}
+		return CheckResponse{}, ErrInvalidResponseStructure()
 	}
 	return CheckResponse{
 		Available: int(reply.Available),
@@ -77,9 +76,17 @@ func decodeGRPCCheckResponse(_ context.Context, grpcReply interface{}) (interfac
 	}, nil
 }
 
-func str2err(s string) error { // todo
-	if s == "" {
+func str2err(s string) error {
+	switch s {
+	case "":
 		return nil
+	case InvalidRequestStructure:
+		return ErrInvalidRequestStructure()
+	case InvalidResponseStructure:
+		return ErrInvalidResponseStructure()
+	case NoRoomAvailable:
+		return ErrNoRoomAvailable()
+	default:
+		return ErrorWithMsg{s}
 	}
-	return errors.New(s)
 }

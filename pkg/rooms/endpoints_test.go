@@ -31,9 +31,9 @@ var endpointBookTest = []struct {
 		token: "jjj.www.ttt",
 		date:  time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC),
 		bookEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return BookResponse{}, ErrNoRoomAvailable{}
+			return BookResponse{}, ErrNoRoomAvailable()
 		},
-		err: ErrNoRoomAvailable{},
+		err: ErrNoRoomAvailable(),
 	},
 	{
 		name:  "should return an error if response structure is incorrect",
@@ -42,7 +42,7 @@ var endpointBookTest = []struct {
 		bookEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
 			return 5, nil
 		},
-		err: ErrInvalidResponseStructure{},
+		err: ErrInvalidResponseStructure(),
 	},
 }
 
@@ -62,15 +62,12 @@ func TestEndpointBook(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrNoRoomAvailable:
-			_, ok = err.(ErrNoRoomAvailable)
-		case ErrInvalidResponseStructure:
-			_, ok = err.(ErrInvalidResponseStructure)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)
@@ -97,9 +94,9 @@ var endpointCheckTest = []struct {
 		name: "should return an error if the endpoint returns an error",
 		date: time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC),
 		checkEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return CheckResponse{}, ErrNoRoomAvailable{}
+			return CheckResponse{}, ErrNoRoomAvailable()
 		},
-		err: ErrNoRoomAvailable{},
+		err: ErrNoRoomAvailable(),
 	},
 	{
 		name: "should return an error if response structure is incorrect",
@@ -107,7 +104,7 @@ var endpointCheckTest = []struct {
 		checkEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
 			return 5, nil
 		},
-		err: ErrInvalidResponseStructure{},
+		err: ErrInvalidResponseStructure(),
 	},
 }
 
@@ -127,15 +124,12 @@ func TestEndpointCheck(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrNoRoomAvailable:
-			_, ok = err.(ErrNoRoomAvailable)
-		case ErrInvalidResponseStructure:
-			_, ok = err.(ErrInvalidResponseStructure)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)
@@ -156,11 +150,11 @@ func (m mockCorrectClientsService) Check(ctx context.Context, date time.Time) (i
 type mockErrorClientsService struct{}
 
 func (m mockErrorClientsService) Book(ctx context.Context, token string, daet time.Time) (int, error) {
-	return 0, ErrNoRoomAvailable{}
+	return 0, ErrNoRoomAvailable()
 }
 
 func (m mockErrorClientsService) Check(ctx context.Context, date time.Time) (int, error) {
-	return 0, ErrNoRoomAvailable{}
+	return 0, ErrNoRoomAvailable()
 }
 
 var makeBookEndpointTest = []struct {
@@ -180,13 +174,13 @@ var makeBookEndpointTest = []struct {
 		name:    "should return an error if the request has the wrong structure",
 		client:  mockCorrectClientsService{},
 		request: "jjj.www.ttt",
-		err:     ErrInvalidRequestStructure{},
+		err:     ErrInvalidRequestStructure(),
 	},
 	{
 		name:    "should return an error if the endpoint returns an error",
 		client:  mockErrorClientsService{},
 		request: BookRequest{},
-		want:    BookResponse{0, ErrNoRoomAvailable{}},
+		want:    BookResponse{0, ErrNoRoomAvailable()},
 	},
 }
 
@@ -204,15 +198,12 @@ func TestMakeBookEndpoint(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrInvalidRequestStructure:
-			_, ok = err.(ErrInvalidRequestStructure)
-		case ErrNoRoomAvailable:
-			_, ok = err.(ErrNoRoomAvailable)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)
@@ -237,13 +228,13 @@ var makeCheckEndpointTest = []struct {
 		name:    "should return an error if the request has the wrong structure",
 		client:  mockCorrectClientsService{},
 		request: "jjj.www.ttt",
-		err:     ErrInvalidRequestStructure{},
+		err:     ErrInvalidRequestStructure(),
 	},
 	{
 		name:    "should return an error if the endpoint returns an error",
 		client:  mockErrorClientsService{},
 		request: CheckRequest{},
-		want:    CheckResponse{0, ErrNoRoomAvailable{}},
+		want:    CheckResponse{0, ErrNoRoomAvailable()},
 	},
 }
 
@@ -261,15 +252,12 @@ func TestMakeCheckEndpoint(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrInvalidRequestStructure:
-			_, ok = err.(ErrInvalidRequestStructure)
-		case ErrNoRoomAvailable:
-			_, ok = err.(ErrNoRoomAvailable)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)

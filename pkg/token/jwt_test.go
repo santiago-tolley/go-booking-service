@@ -3,8 +3,6 @@ package token
 import (
 	"testing"
 	"time"
-
-	"github.com/dgrijalva/jwt-go"
 )
 
 var encodeTokenTest = []struct {
@@ -28,7 +26,7 @@ var encodeTokenTest = []struct {
 		secret: "very_safe",
 		exp:    time.Date(1995, 01, 18, 12, 0, 0, 0, time.UTC),
 		want:   "",
-		err:    ErrInvalidDate{},
+		err:    ErrInvalidDate(),
 	},
 }
 
@@ -59,16 +57,16 @@ var decodeTokenTest = []struct {
 }{
 	{
 		name:   "should return the user in the token",
-		token:  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjM3NTM4NjQwMDAsInVzZXIiOiJKaG9uIn0.VZM7zFwJlaBvHNQHAXu-FE30cy8agg2WdvXqygQUGOc",
+		token:  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjM3NTM4NjQwMDAsInVzZXIiOiJKb2huIn0.6PFni4sxmV5RYiJ3xRfQUQ7fGrGFB6-hvJtwbBuDLd0",
 		secret: "very_safe",
-		want:   "Jhon",
+		want:   "John",
 	},
 	{
 		name:   "should return an error if the token is expired",
-		token:  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjc5MDQzMDQwMCwidXNlciI6Ikpob24ifQ.d0kVjJGODuFl3g3mdauqIwamNWynsxcXFuVrzCK6XPo",
+		token:  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjc5MDQzMDQwMCwidXNlciI6IkpvaG4ifQ.V36DaR7b2FjYer0uaq9KYLDnlJrOgDEo3ayV6lVT1ls",
 		secret: "very_safe",
 		want:   "",
-		err:    &jwt.ValidationError{},
+		err:    ErrExpiredToken(),
 	},
 }
 
@@ -85,17 +83,12 @@ func TestDecode(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrInvalidAlgorithm:
-			_, ok = err.(ErrInvalidAlgorithm)
-		case ErrInvalidToken:
-			_, ok = err.(ErrInvalidToken)
-		case *jwt.ValidationError:
-			_, ok = err.(*jwt.ValidationError)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)

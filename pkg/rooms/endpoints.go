@@ -19,7 +19,7 @@ func (e Endpoints) Book(ctx context.Context, token string, date time.Time) (int,
 	}
 	response, ok := resp.(BookResponse)
 	if !ok {
-		return 0, ErrInvalidResponseStructure{}
+		return 0, ErrInvalidResponseStructure()
 	}
 
 	return response.Id, response.Err
@@ -32,7 +32,7 @@ func (e Endpoints) Check(ctx context.Context, date time.Time) (int, error) {
 	}
 	response, ok := resp.(CheckResponse)
 	if !ok {
-		return 0, ErrInvalidResponseStructure{}
+		return 0, ErrInvalidResponseStructure()
 	}
 
 	return response.Available, response.Err
@@ -49,7 +49,7 @@ func MakeBookEndpoint(p RoomsService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req, ok := request.(BookRequest)
 		if !ok {
-			return BookResponse{}, ErrInvalidRequestStructure{}
+			return BookResponse{}, ErrInvalidRequestStructure()
 		}
 		id, err := p.Book(ctx, req.Token, req.Date)
 
@@ -61,7 +61,7 @@ func MakeCheckEndpoint(p RoomsService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req, ok := request.(CheckRequest)
 		if !ok {
-			return CheckResponse{}, ErrInvalidRequestStructure{}
+			return CheckResponse{}, ErrInvalidRequestStructure()
 		}
 		available, err := p.Check(ctx, req.Date)
 		if err != nil {

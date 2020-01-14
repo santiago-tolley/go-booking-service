@@ -34,7 +34,7 @@ func (s *GrpcServer) Authorize(ctx context.Context, req *pb.AuthorizeRequest) (*
 	}
 	response, ok := resp.(*pb.AuthorizeResponse)
 	if !ok {
-		return &pb.AuthorizeResponse{}, ErrInvalidResponseStructure{}
+		return &pb.AuthorizeResponse{}, ErrInvalidResponseStructure()
 	}
 	return response, nil
 }
@@ -46,7 +46,7 @@ func (s *GrpcServer) Validate(ctx context.Context, req *pb.ValidateRequest) (*pb
 	}
 	response, ok := resp.(*pb.ValidateResponse)
 	if !ok {
-		return &pb.ValidateResponse{}, ErrInvalidResponseStructure{}
+		return &pb.ValidateResponse{}, ErrInvalidResponseStructure()
 	}
 	return response, nil
 }
@@ -54,7 +54,7 @@ func (s *GrpcServer) Validate(ctx context.Context, req *pb.ValidateRequest) (*pb
 func decodeGRPCAuthorizeRequest(ctx context.Context, grpcReq interface{}) (interface{}, error) {
 	req, ok := grpcReq.(*pb.AuthorizeRequest)
 	if !ok {
-		return AuthorizeRequest{}, ErrInvalidRequestStructure{}
+		return AuthorizeRequest{}, ErrInvalidRequestStructure()
 	}
 	return AuthorizeRequest{
 		User:     req.User,
@@ -65,7 +65,7 @@ func decodeGRPCAuthorizeRequest(ctx context.Context, grpcReq interface{}) (inter
 func encodeGRPCAuthorizeResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp, ok := response.(AuthorizeResponse)
 	if !ok {
-		return &pb.AuthorizeResponse{}, ErrInvalidResponseStructure{}
+		return &pb.AuthorizeResponse{}, ErrInvalidResponseStructure()
 	}
 	return &pb.AuthorizeResponse{
 		Token: resp.Token,
@@ -76,7 +76,7 @@ func encodeGRPCAuthorizeResponse(_ context.Context, response interface{}) (inter
 func decodeGRPCValidateRequest(ctx context.Context, grpcReq interface{}) (interface{}, error) {
 	req, ok := grpcReq.(*pb.ValidateRequest)
 	if !ok {
-		return ValidateRequest{}, ErrInvalidRequestStructure{}
+		return ValidateRequest{}, ErrInvalidRequestStructure()
 	}
 	return ValidateRequest{
 		Token: req.Token,
@@ -86,7 +86,7 @@ func decodeGRPCValidateRequest(ctx context.Context, grpcReq interface{}) (interf
 func encodeGRPCValidateResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp, ok := response.(ValidateResponse)
 	if !ok {
-		return &pb.ValidateResponse{}, ErrInvalidResponseStructure{}
+		return &pb.ValidateResponse{}, ErrInvalidResponseStructure()
 	}
 	return &pb.ValidateResponse{
 		User:  resp.User,

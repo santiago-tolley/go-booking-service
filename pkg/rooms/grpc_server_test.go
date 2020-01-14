@@ -35,13 +35,13 @@ func (a grpcCheckWrongResponseMock) ServeGRPC(ctx context.Context, request inter
 type grpcBookErrorMock struct{}
 
 func (a grpcBookErrorMock) ServeGRPC(ctx context.Context, request interface{}) (context.Context, interface{}, error) {
-	return ctx, &pb.BookResponse{}, ErrNoRoomAvailable{}
+	return ctx, &pb.BookResponse{}, ErrNoRoomAvailable()
 }
 
 type grpcCheckErrorMock struct{}
 
 func (a grpcCheckErrorMock) ServeGRPC(ctx context.Context, request interface{}) (context.Context, interface{}, error) {
-	return ctx, &pb.CheckResponse{}, ErrNoRoomAvailable{}
+	return ctx, &pb.CheckResponse{}, ErrNoRoomAvailable()
 }
 
 var grpcServerBookTest = []struct {
@@ -68,7 +68,7 @@ var grpcServerBookTest = []struct {
 		},
 		request: &pb.BookRequest{},
 		want:    &pb.BookResponse{},
-		err:     ErrNoRoomAvailable{},
+		err:     ErrNoRoomAvailable(),
 	},
 	{
 		name: "should return en error if the ServeGRPC response is the wrong type",
@@ -78,7 +78,7 @@ var grpcServerBookTest = []struct {
 		},
 		request: &pb.BookRequest{},
 		want:    &pb.BookResponse{},
-		err:     ErrInvalidResponseStructure{},
+		err:     ErrInvalidResponseStructure(),
 	},
 }
 
@@ -95,15 +95,12 @@ func TestGRPCServerBook(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrNoRoomAvailable:
-			_, ok = err.(ErrNoRoomAvailable)
-		case ErrInvalidResponseStructure:
-			_, ok = err.(ErrInvalidResponseStructure)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)
@@ -135,7 +132,7 @@ var grpcServerCheckTest = []struct {
 		},
 		request: &pb.CheckRequest{},
 		want:    &pb.CheckResponse{},
-		err:     ErrNoRoomAvailable{},
+		err:     ErrNoRoomAvailable(),
 	},
 	{
 		name: "should return en error if the ServeGRPC response is the wrong type",
@@ -145,7 +142,7 @@ var grpcServerCheckTest = []struct {
 		},
 		request: &pb.CheckRequest{},
 		want:    &pb.CheckResponse{},
-		err:     ErrInvalidResponseStructure{},
+		err:     ErrInvalidResponseStructure(),
 	},
 }
 
@@ -162,15 +159,12 @@ func TestGRPCServerCheck(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrNoRoomAvailable:
-			_, ok = err.(ErrNoRoomAvailable)
-		case ErrInvalidResponseStructure:
-			_, ok = err.(ErrInvalidResponseStructure)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)
@@ -193,7 +187,7 @@ var decodeGRPCBookRequestTest = []struct {
 		name:    "should return an error if the request has the wrong structure",
 		request: "jjj.www.ttt",
 		want:    BookRequest{},
-		err:     ErrInvalidRequestStructure{},
+		err:     ErrInvalidRequestStructure(),
 	},
 }
 
@@ -210,13 +204,12 @@ func TestDecodeGRPCBookRequest(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrInvalidRequestStructure:
-			_, ok = err.(ErrInvalidRequestStructure)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)
@@ -239,7 +232,7 @@ var decodeGRPCCheckRequestTest = []struct {
 		name:    "should return an error if the request has the wrong structure",
 		request: time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC).Unix(),
 		want:    CheckRequest{},
-		err:     ErrInvalidRequestStructure{},
+		err:     ErrInvalidRequestStructure(),
 	},
 }
 
@@ -256,13 +249,12 @@ func TestDecodeGRPCCheckRequest(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrInvalidRequestStructure:
-			_, ok = err.(ErrInvalidRequestStructure)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)
@@ -285,7 +277,7 @@ var encodeGRPCBookResponseTest = []struct {
 		name:    "should return an error if the request has the wrong structure",
 		request: 1,
 		want:    &pb.BookResponse{},
-		err:     ErrInvalidResponseStructure{},
+		err:     ErrInvalidResponseStructure(),
 	},
 }
 
@@ -302,13 +294,12 @@ func TestEncodeGRPCBookResponse(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrInvalidResponseStructure:
-			_, ok = err.(ErrInvalidResponseStructure)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)
@@ -331,7 +322,7 @@ var encodeGRPCCheckResponseTest = []struct {
 		name:    "should return an error if the request has the wrong structure",
 		request: "John",
 		want:    &pb.CheckResponse{},
-		err:     ErrInvalidResponseStructure{},
+		err:     ErrInvalidResponseStructure(),
 	},
 }
 
@@ -348,13 +339,12 @@ func TestEncodeGRPCCheckResponse(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrInvalidResponseStructure:
-			_, ok = err.(ErrInvalidResponseStructure)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)
