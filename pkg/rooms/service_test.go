@@ -17,14 +17,14 @@ func (v validatorCorrect) Validate(_ context.Context, token string) (string, err
 type validatorIncorrect struct{}
 
 func (v validatorIncorrect) Validate(_ context.Context, token string) (string, error) {
-	return "", jwt.ErrInvalidToken{}
+	return "", jwt.ErrInvalidToken()
 }
 
 var serviceBookTest = []struct {
 	name      string
 	token     string
 	date      time.Time
-	rooms     []room
+	rooms     []Room
 	validator Validator
 	want      int
 	err       error
@@ -33,7 +33,7 @@ var serviceBookTest = []struct {
 		name:  "should return booked room id",
 		token: "jjj.www.ttt",
 		date:  time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC),
-		rooms: []room{
+		rooms: []Room{
 			{
 				map[time.Time]string{},
 				&sync.Mutex{},
@@ -46,22 +46,22 @@ var serviceBookTest = []struct {
 		name:      "should return en error if there are no rooms available",
 		token:     "jjj.www.ttt",
 		date:      time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC),
-		rooms:     []room{},
+		rooms:     []Room{},
 		validator: validatorCorrect{},
-		err:       ErrNoRoomAvailable{},
+		err:       ErrNoRoomAvailable(),
 	},
 	{
 		name:  "should return en error if the token is invalid",
 		token: "jjj.www.ttt",
 		date:  time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC),
-		rooms: []room{
+		rooms: []Room{
 			{
 				map[time.Time]string{},
 				&sync.Mutex{},
 			},
 		},
 		validator: validatorIncorrect{},
-		err:       jwt.ErrInvalidToken{},
+		err:       jwt.ErrInvalidToken(),
 	},
 }
 
@@ -79,15 +79,12 @@ func TestServiceBook(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrNoRoomAvailable:
-			_, ok = err.(ErrNoRoomAvailable)
-		case jwt.ErrInvalidToken:
-			_, ok = err.(jwt.ErrInvalidToken)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)
@@ -99,7 +96,7 @@ var serviceCheckTest = []struct {
 	name      string
 	token     string
 	date      time.Time
-	rooms     []room
+	rooms     []Room
 	validator Validator
 	want      int
 	err       error
@@ -108,7 +105,7 @@ var serviceCheckTest = []struct {
 		name:  "should retrun the number of available rooms (3)",
 		token: "jjj.www.ttt",
 		date:  time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC),
-		rooms: []room{
+		rooms: []Room{
 			{
 				map[time.Time]string{},
 				&sync.Mutex{},
@@ -129,7 +126,7 @@ var serviceCheckTest = []struct {
 		name:  "should retrun the number of available rooms (0)",
 		token: "jjj.www.ttt",
 		date:  time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC),
-		rooms: []room{
+		rooms: []Room{
 			{
 				map[time.Time]string{
 					time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC): "John",
@@ -156,13 +153,12 @@ func TestServiceCheck(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case jwt.ErrInvalidToken:
-			_, ok = err.(jwt.ErrInvalidToken)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)

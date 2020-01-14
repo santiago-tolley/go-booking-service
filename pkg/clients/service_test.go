@@ -2,46 +2,82 @@ package clients
 
 import (
 	"context"
-	"go-booking-service/pkg/token"
+	jwt "go-booking-service/pkg/token"
 	"testing"
+	"time"
 )
+
+type mockCorrectEncoderDecoder struct{}
+
+func (m mockCorrectEncoderDecoder) Encode(user, secret string, date time.Time) (string, error) {
+	return "jjj.www.ttt", nil
+}
+
+func (m mockCorrectEncoderDecoder) Decode(token, secret string) (string, error) {
+	return "John", nil
+}
+
+type mockErrorEncoderDecoder struct{}
+
+func (m mockErrorEncoderDecoder) Encode(user, secret string, date time.Time) (string, error) {
+	return "", jwt.ErrInvalidToken()
+}
+
+func (m mockErrorEncoderDecoder) Decode(token, secret string) (string, error) {
+	return "", jwt.ErrInvalidToken()
+}
 
 var authorizeTest = []struct {
 	name     string
 	user     string
 	password string
 	users    map[string]string
+	encoder  EncoderDecoder
 	want     string
 	err      error
 }{
 	{
 		name:     "should return the token with the user",
-		user:     "Jhon",
+		user:     "John",
 		password: "pass",
 		users: map[string]string{
-			"Jhon": "pass",
+			"John": "pass",
 		},
-		want: "Jhon",
+		encoder: mockCorrectEncoderDecoder{},
+		want:    "John",
 	},
 	{
 		name:     "should return an error if the user doesn't exist",
 		user:     "Charles",
 		password: "pass",
 		users: map[string]string{
-			"Jhon": "pass",
+			"John": "pass",
 		},
-		want: "",
-		err:  ErrInvalidCredentials{},
+		encoder: mockCorrectEncoderDecoder{},
+		want:    "",
+		err:     ErrInvalidCredentials(),
 	},
 	{
 		name: "should return an error if the password doesn't match",
-		user: "Jhon",
+		user: "John",
 		users: map[string]string{
-			"Jhon": "pass",
+			"John": "pass",
 		},
+		encoder:  mockCorrectEncoderDecoder{},
 		password: "not_pass",
 		want:     "",
-		err:      ErrInvalidCredentials{},
+		err:      ErrInvalidCredentials(),
+	},
+	{
+		name: "should return an error if the encoder returns an error",
+		user: "John",
+		users: map[string]string{
+			"John": "pass",
+		},
+		encoder:  mockErrorEncoderDecoder{},
+		password: "pass",
+		want:     "",
+		err:      jwt.ErrInvalidToken(),
 	},
 }
 
@@ -51,7 +87,7 @@ func TestAuthorize(t *testing.T) {
 	for _, testcase := range authorizeTest {
 		t.Logf(testcase.name)
 
-		c := clientsService{token.JWTEncoder{}, testcase.users}
+		c := clientsService{testcase.encoder, testcase.users}
 		result, err := c.Authorize(context.Background(), testcase.user, testcase.password)
 
 		if !((result != "" && testcase.want != "") || (result == testcase.want)) {
@@ -59,13 +95,12 @@ func TestAuthorize(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrInvalidCredentials:
-			_, ok = err.(ErrInvalidCredentials)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)
@@ -74,19 +109,21 @@ func TestAuthorize(t *testing.T) {
 }
 
 var validateTest = []struct {
-	name  string
-	token string
-	users map[string]string
-	want  string
-	err   error
+	name    string
+	token   string
+	users   map[string]string
+	decoder EncoderDecoder
+	want    string
+	err     error
 }{
 	{
 		name:  "should return the user in the token",
 		token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjM3NTM4NjQwMDAsInVzZXIiOiJKaG9uIn0.VZM7zFwJlaBvHNQHAXu-FE30cy8agg2WdvXqygQUGOc",
 		users: map[string]string{
-			"Jhon": "pass",
+			"John": "pass",
 		},
-		want: "Jhon",
+		decoder: mockCorrectEncoderDecoder{},
+		want:    "John",
 	},
 	{
 		name:  "should return an error if the user doesn't exist",
@@ -94,8 +131,19 @@ var validateTest = []struct {
 		users: map[string]string{
 			"Charles": "pass",
 		},
-		want: "",
-		err:  ErrUserNotFound{},
+		decoder: mockCorrectEncoderDecoder{},
+		want:    "",
+		err:     ErrUserNotFound(),
+	},
+	{
+		name:  "should return an error if the token is invalid",
+		token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjM3NTM4NjQwMDAsInVzZXIiOiJKaG9uIn0.VZM7zFwJlaBvHNQHAXu-FE30cy8agg2WdvXqygQUGOc",
+		users: map[string]string{
+			"Charles": "pass",
+		},
+		decoder: mockErrorEncoderDecoder{},
+		want:    "",
+		err:     jwt.ErrInvalidToken(),
 	},
 }
 
@@ -105,7 +153,7 @@ func TestValidate(t *testing.T) {
 	for _, testcase := range validateTest {
 		t.Logf(testcase.name)
 
-		c := clientsService{token.JWTEncoder{}, testcase.users}
+		c := clientsService{testcase.decoder, testcase.users}
 		result, err := c.Validate(context.Background(), testcase.token)
 
 		if result != testcase.want {
@@ -113,15 +161,12 @@ func TestValidate(t *testing.T) {
 		}
 
 		var ok bool
-		switch testcase.err.(type) {
-		case nil:
-			if err == nil {
+		if testcase.err != nil {
+			if err == testcase.err {
 				ok = true
 			}
-		case ErrInvalidToken:
-			_, ok = err.(ErrInvalidToken)
-		case ErrUserNotFound:
-			_, ok = err.(ErrUserNotFound)
+		} else if err == nil {
+			ok = true
 		}
 		if !ok {
 			t.Errorf("=> Got %v wanted %v", err, testcase.err)

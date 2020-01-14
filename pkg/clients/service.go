@@ -40,10 +40,7 @@ func (c clientsService) Authorize(ctx context.Context, user, password string) (s
 func (c clientsService) Validate(ctx context.Context, token string) (string, error) {
 	user, err := c.encoder.Decode(token, commons.JWTSecret)
 	if err != nil {
-		if err.Error() == "Token is expired" {
-			return "", ErrExpiredToken()
-		}
-		return "", ErrInvalidToken()
+		return "", err
 	}
 	if _, ok := c.users[user]; !ok {
 		return "", ErrUserNotFound()
