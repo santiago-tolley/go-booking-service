@@ -8,5 +8,5 @@ const (
 	ClientsGrpcAddr   = ":8082"
 
 	JWTSecret     = "very_secret"
-	JWTExpiration = 1 * time.Minute
+	JWTExpiration = 10 * time.Minute
 )
