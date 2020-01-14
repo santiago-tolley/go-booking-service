@@ -48,6 +48,12 @@ func NewHTTPHandler(endpoint Endpoints) http.Handler {
 func decodeHTTPBookRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var req = BookRequest{}
 	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		return req, err
+	}
+	d := mux.Vars(r)["date"]
+	date, err := time.Parse("2006-01-02", d)
+	req.Date = date
 	return req, err
 }
 
