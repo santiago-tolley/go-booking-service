@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"go-booking-service/commons"
 	"go-booking-service/pb"
 	"go-booking-service/pkg/clients"
 	"go-booking-service/pkg/token"
@@ -18,13 +19,13 @@ import (
 )
 
 func main() {
-	grpcAddr := ":8082"
+	grpcAddr := commons.ClientsGrpcAddr
 
 	logger := kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stdout))
 	errLogger := kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stderr))
 
 	var (
-		service    = clients.NewClientsServer(token.JWTEncoder{}, map[string]string{})
+		service    = clients.NewClientsServer(token.JWTEncoder{}, map[string]string{"John": "pass"})
 		endpoints  = clients.MakeEndpoints(service)
 		grpcServer = clients.NewGRPCServer(endpoints)
 	)

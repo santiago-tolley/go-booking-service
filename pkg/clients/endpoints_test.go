@@ -161,11 +161,11 @@ func (m mockCorrectClientsService) Validate(ctx context.Context, token string) (
 type mockErrorClientsService struct{}
 
 func (m mockErrorClientsService) Authorize(ctx context.Context, user, password string) (string, error) {
-	return "", ErrInvalidCredentials{}
+	return "", ErrInvalidCredentials()
 }
 
 func (m mockErrorClientsService) Validate(ctx context.Context, token string) (string, error) {
-	return "", ErrUserNotFound{}
+	return "", ErrUserNotFound()
 }
 
 var makeAuthorizeEndpointTest = []struct {
@@ -185,13 +185,13 @@ var makeAuthorizeEndpointTest = []struct {
 		name:    "should return an error if the request has the wrong structure",
 		client:  mockCorrectClientsService{},
 		request: "Jhon",
-		err:     ErrInvalidRequestStructure{},
+		err:     ErrInvalidRequestStructure(),
 	},
 	{
 		name:    "should return an error if the endpoint returns an error",
 		client:  mockErrorClientsService{},
 		request: AuthorizeRequest{},
-		want:    AuthorizeResponse{"", ErrInvalidCredentials{}},
+		want:    AuthorizeResponse{"", ErrInvalidCredentials()},
 	},
 }
 
@@ -242,13 +242,13 @@ var makeValidateEndpointTest = []struct {
 		name:    "should return an error if the request has the wrong structure",
 		client:  mockCorrectClientsService{},
 		request: "jjj.www.ttt",
-		err:     ErrInvalidRequestStructure{},
+		err:     ErrInvalidRequestStructure(),
 	},
 	{
 		name:    "should return an error if the endpoint returns an error",
 		client:  mockErrorClientsService{},
 		request: ValidateRequest{},
-		want:    ValidateResponse{"", ErrUserNotFound{}},
+		want:    ValidateResponse{"", ErrUserNotFound()},
 	},
 }
 

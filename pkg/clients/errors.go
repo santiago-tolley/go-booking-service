@@ -1,35 +1,42 @@
 package clients
 
-import "fmt"
+const (
+	InvalidCredentials       = "Invalid username or password"
+	InvalidToken             = "Invalid JSON Web Token"
+	ExpiredToken             = "Expired JSON Web Token"
+	UserNotFound             = "User not found"
+	InvalidRequestStructure  = "Invalid request structure"
+	InvalidResponseStructure = "Invalid response structure"
+)
 
-type ErrInvalidCredentials struct{}
-
-func (e ErrInvalidCredentials) Error() string {
-	return "Invalid username or password"
+type ErrorWithMsg struct {
+	msg string
 }
 
-type ErrInvalidToken struct{}
-
-func (e ErrInvalidToken) Error() string {
-	return "Invalid JSON Web Token"
+func (e ErrorWithMsg) Error() string {
+	return e.msg
 }
 
-type ErrUserNotFound struct {
-	user string
+func ErrInvalidCredentials() error {
+	return ErrorWithMsg{InvalidCredentials}
 }
 
-func (e ErrUserNotFound) Error() string {
-	return fmt.Sprintf("User not found %v", e.user)
+func ErrInvalidToken() error {
+	return ErrorWithMsg{InvalidToken}
 }
 
-type ErrInvalidResponseStructure struct{}
-
-func (e ErrInvalidResponseStructure) Error() string {
-	return "Invalid response structure"
+func ErrExpiredToken() error {
+	return ErrorWithMsg{ExpiredToken}
 }
 
-type ErrInvalidRequestStructure struct{}
+func ErrUserNotFound() error {
+	return ErrorWithMsg{UserNotFound}
+}
 
-func (e ErrInvalidRequestStructure) Error() string {
-	return "Invalid request structure"
+func ErrInvalidRequestStructure() error {
+	return ErrorWithMsg{InvalidRequestStructure}
+}
+
+func ErrInvalidResponseStructure() error {
+	return ErrorWithMsg{InvalidResponseStructure}
 }
