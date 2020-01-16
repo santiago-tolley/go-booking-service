@@ -2,8 +2,9 @@ package clients
 
 import (
 	"context"
-	"reflect"
 	"testing"
+
+	"gotest.tools/assert"
 
 	"github.com/go-kit/kit/endpoint"
 )
@@ -52,27 +53,14 @@ func TestEndpointAuthorize(t *testing.T) {
 
 	for _, testcase := range endpointAuthorizeTest {
 		t.Logf(testcase.name)
-
 		endpointMock := Endpoints{
 			AuthorizeEndpoint: testcase.authorizeEndpoint,
 		}
 		result, err := endpointMock.Authorize(context.Background(), testcase.user, testcase.password)
 
-		if !((result != "" && testcase.want != "") || (result == testcase.want)) {
-			t.Errorf("=> Got %v wanted %v", result, testcase.want)
-		}
+		assert.Equal(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
 	}
 }
 
@@ -119,24 +107,10 @@ func TestEndpointValidate(t *testing.T) {
 		endpointMock := Endpoints{
 			ValidateEndpoint: testcase.validateEndpoint,
 		}
-
 		result, err := endpointMock.Validate(context.Background(), testcase.token)
 
-		if result != testcase.want {
-			t.Errorf("=> Got %v wanted %v", result, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.Equal(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -197,21 +171,8 @@ func TestMakeAuthorizeEndpoint(t *testing.T) {
 		endpoint := MakeAuthorizeEndpoint(testcase.client)
 		result, err := endpoint(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(*AuthorizeResponse), testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -252,20 +213,7 @@ func TestMakeValidateEndpoint(t *testing.T) {
 		endpoint := MakeValidateEndpoint(testcase.client)
 		result, err := endpoint(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(*ValidateResponse), testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }

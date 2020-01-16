@@ -3,9 +3,10 @@ package rooms
 import (
 	"context"
 	"go-booking-service/pb"
-	"reflect"
 	"testing"
 	"time"
+
+	"gotest.tools/assert"
 )
 
 var encodeGRPCBookRequestTest = []struct {
@@ -35,21 +36,8 @@ func TestEncodeGRPCBookRequest(t *testing.T) {
 
 		result, err := encodeGRPCBookRequest(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(*pb.BookRequest), testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -80,21 +68,8 @@ func TestEncodeGRPCCheckRequest(t *testing.T) {
 
 		result, err := encodeGRPCCheckRequest(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(*pb.CheckRequest), testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -125,21 +100,8 @@ func TestDecodeGRPCBookResponse(t *testing.T) {
 
 		result, err := decodeGRPCBookResponse(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(*BookResponse), testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -170,20 +132,7 @@ func TestDecodeGRPCCheckResponse(t *testing.T) {
 
 		result, err := decodeGRPCCheckResponse(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(*CheckResponse), testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }

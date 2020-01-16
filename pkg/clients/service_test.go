@@ -5,6 +5,8 @@ import (
 	jwt "go-booking-service/pkg/token"
 	"testing"
 	"time"
+
+	"gotest.tools/assert"
 )
 
 type mockCorrectEncoderDecoder struct{}
@@ -44,7 +46,7 @@ var authorizeTest = []struct {
 			"John": "pass",
 		},
 		encoder: mockCorrectEncoderDecoder{},
-		want:    "John",
+		want:    "jjj.www.ttt",
 	},
 	{
 		name:     "should return an error if the user doesn't exist",
@@ -90,21 +92,8 @@ func TestAuthorize(t *testing.T) {
 		c := clientsService{testcase.encoder, testcase.users}
 		result, err := c.Authorize(context.Background(), testcase.user, testcase.password)
 
-		if !((result != "" && testcase.want != "") || (result == testcase.want)) {
-			t.Errorf("=> Got %v wanted %v", result, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.Equal(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -156,20 +145,7 @@ func TestValidate(t *testing.T) {
 		c := clientsService{testcase.decoder, testcase.users}
 		result, err := c.Validate(context.Background(), testcase.token)
 
-		if result != testcase.want {
-			t.Errorf("=> Got %v wanted %v", result, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.Equal(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }

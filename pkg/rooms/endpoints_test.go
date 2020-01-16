@@ -2,11 +2,11 @@ package rooms
 
 import (
 	"context"
-	"reflect"
 	"testing"
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
+	"gotest.tools/assert"
 )
 
 var endpointBookTest = []struct {
@@ -57,21 +57,8 @@ func TestEndpointBook(t *testing.T) {
 		}
 		result, err := endpointMock.Book(context.Background(), testcase.token, testcase.date)
 
-		if result != testcase.want {
-			t.Errorf("=> Got %v wanted %v", result, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.Equal(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -119,21 +106,8 @@ func TestEndpointCheck(t *testing.T) {
 		}
 		result, err := endpointMock.Check(context.Background(), testcase.date)
 
-		if result != testcase.want {
-			t.Errorf("=> Got %v wanted %v", result, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.Equal(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -194,21 +168,8 @@ func TestMakeBookEndpoint(t *testing.T) {
 		endpoint := MakeBookEndpoint(testcase.client)
 		result, err := endpoint(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(*BookResponse), testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -249,20 +210,7 @@ func TestMakeCheckEndpoint(t *testing.T) {
 		endpoint := MakeCheckEndpoint(testcase.client)
 		result, err := endpoint(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(*CheckResponse), testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
