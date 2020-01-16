@@ -175,18 +175,18 @@ func TestGRPCServerCheck(t *testing.T) {
 var decodeGRPCBookRequestTest = []struct {
 	name    string
 	request interface{}
-	want    BookRequest
+	want    *BookRequest
 	err     error
 }{
 	{
 		name:    "should return values in the internal structure",
 		request: &pb.BookRequest{Token: "jjj.www.ttt", Date: time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC).Unix()},
-		want:    BookRequest{Token: "jjj.www.ttt", Date: time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC)},
+		want:    &BookRequest{Token: "jjj.www.ttt", Date: time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC)},
 	},
 	{
 		name:    "should return an error if the request has the wrong structure",
 		request: "jjj.www.ttt",
-		want:    BookRequest{},
+		want:    &BookRequest{},
 		err:     ErrInvalidRequestStructure(),
 	},
 }
@@ -199,7 +199,7 @@ func TestDecodeGRPCBookRequest(t *testing.T) {
 
 		result, err := decodeGRPCBookRequest(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(BookRequest), testcase.want) {
+		if !reflect.DeepEqual(result.(*BookRequest), testcase.want) {
 			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
 		}
 
@@ -220,18 +220,18 @@ func TestDecodeGRPCBookRequest(t *testing.T) {
 var decodeGRPCCheckRequestTest = []struct {
 	name    string
 	request interface{}
-	want    CheckRequest
+	want    *CheckRequest
 	err     error
 }{
 	{
 		name:    "should return the new structure with the date",
 		request: &pb.CheckRequest{Date: time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC).Unix()},
-		want:    CheckRequest{Date: time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC)},
+		want:    &CheckRequest{Date: time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC)},
 	},
 	{
 		name:    "should return an error if the request has the wrong structure",
 		request: time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC).Unix(),
-		want:    CheckRequest{},
+		want:    &CheckRequest{},
 		err:     ErrInvalidRequestStructure(),
 	},
 }
@@ -244,7 +244,7 @@ func TestDecodeGRPCCheckRequest(t *testing.T) {
 
 		result, err := decodeGRPCCheckRequest(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(CheckRequest), testcase.want) {
+		if !reflect.DeepEqual(result.(*CheckRequest), testcase.want) {
 			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
 		}
 
@@ -270,7 +270,7 @@ var encodeGRPCBookResponseTest = []struct {
 }{
 	{
 		name:    "should return the pb structure with the id",
-		request: BookResponse{Id: 1, Err: nil},
+		request: &BookResponse{Id: 1, Err: nil},
 		want:    &pb.BookResponse{Id: 1, Error: ""},
 	},
 	{
@@ -315,7 +315,7 @@ var encodeGRPCCheckResponseTest = []struct {
 }{
 	{
 		name:    "should return the pb structure with the number of available rooms",
-		request: CheckResponse{Available: 5},
+		request: &CheckResponse{Available: 5},
 		want:    &pb.CheckResponse{Available: 5},
 	},
 	{

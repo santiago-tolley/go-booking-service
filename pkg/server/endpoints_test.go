@@ -77,7 +77,7 @@ var endpointAuthorizeTest = []struct {
 		user:     "Jhon",
 		password: "pass",
 		authorizeEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return AuthorizeResponse{"jjj.www.ttt", nil}, nil
+			return &AuthorizeResponse{"jjj.www.ttt", nil}, nil
 		},
 		want: "jjj.www.ttt",
 	},
@@ -96,7 +96,7 @@ var endpointAuthorizeTest = []struct {
 		user:     "Jhon",
 		password: "pass",
 		authorizeEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return nil, clients.ErrInvalidCredentials()
+			return &AuthorizeResponse{}, clients.ErrInvalidCredentials()
 		},
 		want: "",
 		err:  clients.ErrInvalidCredentials(),
@@ -143,7 +143,7 @@ var endpointValidateTest = []struct {
 		name:  "should return the user",
 		token: "jjj.www.ttt",
 		validateEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return ValidateResponse{"John", nil}, nil
+			return &ValidateResponse{"John", nil}, nil
 		},
 		want: "John",
 	},
@@ -209,7 +209,7 @@ var endpointBookTest = []struct {
 		token: "jjj.www.ttt",
 		date:  time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC),
 		bookEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return BookResponse{1, nil}, nil
+			return &BookResponse{1, nil}, nil
 		},
 		want: 1,
 	},
@@ -275,7 +275,7 @@ var endpointCheckTest = []struct {
 		name: "should return the number of available rooms",
 		date: time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC),
 		checkEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return CheckResponse{5, nil}, nil
+			return &CheckResponse{5, nil}, nil
 		},
 		want: 5,
 	},

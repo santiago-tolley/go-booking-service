@@ -15,7 +15,7 @@ var encodeGRPCAuthorizeRequestTest = []struct {
 }{
 	{
 		name:    "should return the user",
-		request: AuthorizeRequest{User: "Jhon", Password: "pass"},
+		request: &AuthorizeRequest{User: "Jhon", Password: "pass"},
 		want:    &pb.AuthorizeRequest{User: "Jhon", Password: "pass"},
 	},
 	{
@@ -60,7 +60,7 @@ var encodeGRPCValidateRequestTest = []struct {
 }{
 	{
 		name:    "should return the user",
-		request: ValidateRequest{Token: "jjj.www.ttt"},
+		request: &ValidateRequest{Token: "jjj.www.ttt"},
 		want:    &pb.ValidateRequest{Token: "jjj.www.ttt"},
 	},
 	{
@@ -100,18 +100,18 @@ func TestEncodeGRPCValidateRequest(t *testing.T) {
 var decodeGRPCAuthorizeResponseTest = []struct {
 	name    string
 	request interface{}
-	want    AuthorizeResponse
+	want    *AuthorizeResponse
 	err     error
 }{
 	{
 		name:    "should return the new structure with the token",
 		request: &pb.AuthorizeResponse{Token: "jjj.www.ttt", Error: ""},
-		want:    AuthorizeResponse{Token: "jjj.www.ttt", Err: nil},
+		want:    &AuthorizeResponse{Token: "jjj.www.ttt", Err: nil},
 	},
 	{
 		name:    "should return an error if the request has the wrong structure",
 		request: "jjj.www.ttt",
-		want:    AuthorizeResponse{},
+		want:    &AuthorizeResponse{},
 		err:     ErrInvalidResponseStructure(),
 	},
 }
@@ -124,7 +124,7 @@ func TestDecodeGRPCAuthorizeResponse(t *testing.T) {
 
 		result, err := decodeGRPCAuthorizeResponse(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(AuthorizeResponse), testcase.want) {
+		if !reflect.DeepEqual(result.(*AuthorizeResponse), testcase.want) {
 			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
 		}
 
@@ -145,18 +145,18 @@ func TestDecodeGRPCAuthorizeResponse(t *testing.T) {
 var decodeGRPCValidateResponseTest = []struct {
 	name    string
 	request interface{}
-	want    ValidateResponse
+	want    *ValidateResponse
 	err     error
 }{
 	{
 		name:    "should return the new structure with the user",
 		request: &pb.ValidateResponse{User: "Jhon", Error: ""},
-		want:    ValidateResponse{User: "Jhon", Err: nil},
+		want:    &ValidateResponse{User: "Jhon", Err: nil},
 	},
 	{
 		name:    "should return an error if the request has the wrong structure",
 		request: "Jhon",
-		want:    ValidateResponse{},
+		want:    &ValidateResponse{},
 		err:     ErrInvalidResponseStructure(),
 	},
 }
@@ -169,7 +169,7 @@ func TestDecodeGRPCValidateResponse(t *testing.T) {
 
 		result, err := decodeGRPCValidateResponse(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(ValidateResponse), testcase.want) {
+		if !reflect.DeepEqual(result.(*ValidateResponse), testcase.want) {
 			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
 		}
 

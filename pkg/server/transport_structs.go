@@ -40,18 +40,18 @@ type ValidateResponse struct {
 	Err  error  `json:"err"`
 }
 
-func (r AuthorizeResponse) Failed() error {
+func (r *AuthorizeResponse) Failed() error {
 	return r.Err
 }
 
-func (r ValidateResponse) Failed() error {
+func (r *ValidateResponse) Failed() error {
 	return r.Err
 }
 
-func (r BookResponse) Failed() error {
+func (r *BookResponse) Failed() error {
 	return r.Err
 }
 
-func (r CheckResponse) Failed() error {
+func (r *CheckResponse) Failed() error {
 	return r.Err
 }

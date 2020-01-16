@@ -34,7 +34,7 @@ func NewGRPCClient(conn *grpc.ClientConn) Endpoints {
 }
 
 func encodeGRPCBookRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req, ok := request.(BookRequest)
+	req, ok := request.(*BookRequest)
 	if !ok {
 		return &pb.BookRequest{}, ErrInvalidRequestStructure()
 	}
@@ -47,16 +47,16 @@ func encodeGRPCBookRequest(_ context.Context, request interface{}) (interface{},
 func decodeGRPCBookResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply, ok := grpcReply.(*pb.BookResponse)
 	if !ok {
-		return BookResponse{}, ErrInvalidResponseStructure()
+		return &BookResponse{}, ErrInvalidResponseStructure()
 	}
-	return BookResponse{
+	return &BookResponse{
 		Id:  int(reply.Id),
 		Err: str2err(reply.Error),
 	}, nil
 }
 
 func encodeGRPCCheckRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req, ok := request.(CheckRequest)
+	req, ok := request.(*CheckRequest)
 	if !ok {
 		return &pb.CheckRequest{}, ErrInvalidRequestStructure()
 	}
@@ -68,9 +68,9 @@ func encodeGRPCCheckRequest(_ context.Context, request interface{}) (interface{}
 func decodeGRPCCheckResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply, ok := grpcReply.(*pb.CheckResponse)
 	if !ok {
-		return CheckResponse{}, ErrInvalidResponseStructure()
+		return &CheckResponse{}, ErrInvalidResponseStructure()
 	}
-	return CheckResponse{
+	return &CheckResponse{
 		Available: int(reply.Available),
 		Err:       str2err(reply.Error),
 	}, nil

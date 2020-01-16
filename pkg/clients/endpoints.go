@@ -12,11 +12,11 @@ type Endpoints struct {
 }
 
 func (e Endpoints) Authorize(ctx context.Context, user, password string) (string, error) {
-	resp, err := e.AuthorizeEndpoint(ctx, AuthorizeRequest{User: user, Password: password})
+	resp, err := e.AuthorizeEndpoint(ctx, &AuthorizeRequest{User: user, Password: password})
 	if err != nil {
 		return "", err
 	}
-	response, ok := resp.(AuthorizeResponse)
+	response, ok := resp.(*AuthorizeResponse)
 	if !ok {
 		return "", ErrInvalidResponseStructure()
 	}
@@ -25,11 +25,11 @@ func (e Endpoints) Authorize(ctx context.Context, user, password string) (string
 }
 
 func (e Endpoints) Validate(ctx context.Context, token string) (string, error) {
-	resp, err := e.ValidateEndpoint(ctx, ValidateRequest{Token: token})
+	resp, err := e.ValidateEndpoint(ctx, &ValidateRequest{Token: token})
 	if err != nil {
 		return "", err
 	}
-	response, ok := resp.(ValidateResponse)
+	response, ok := resp.(*ValidateResponse)
 	if !ok {
 		return "", ErrInvalidResponseStructure()
 	}
@@ -46,24 +46,24 @@ func MakeEndpoints(c ClientsService) Endpoints {
 
 func MakeAuthorizeEndpoint(c ClientsService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req, ok := request.(AuthorizeRequest)
+		req, ok := request.(*AuthorizeRequest)
 		if !ok {
-			return AuthorizeResponse{}, ErrInvalidRequestStructure()
+			return &AuthorizeResponse{}, ErrInvalidRequestStructure()
 		}
 
 		token, err := c.Authorize(ctx, req.User, req.Password)
-		return AuthorizeResponse{token, err}, nil
+		return &AuthorizeResponse{token, err}, nil
 	}
 }
 
 func MakeValidateEndpoint(c ClientsService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req, ok := request.(ValidateRequest)
+		req, ok := request.(*ValidateRequest)
 		if !ok {
-			return ValidateResponse{}, ErrInvalidRequestStructure()
+			return &ValidateResponse{}, ErrInvalidRequestStructure()
 		}
 
 		user, err := c.Validate(ctx, req.Token)
-		return ValidateResponse{user, err}, nil
+		return &ValidateResponse{user, err}, nil
 	}
 }

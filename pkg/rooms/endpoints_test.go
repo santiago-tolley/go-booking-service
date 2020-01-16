@@ -22,7 +22,7 @@ var endpointBookTest = []struct {
 		token: "jjj.www.ttt",
 		date:  time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC),
 		bookEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return BookResponse{5, nil}, nil
+			return &BookResponse{5, nil}, nil
 		},
 		want: 5,
 	},
@@ -31,7 +31,7 @@ var endpointBookTest = []struct {
 		token: "jjj.www.ttt",
 		date:  time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC),
 		bookEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return BookResponse{}, ErrNoRoomAvailable()
+			return &BookResponse{}, ErrNoRoomAvailable()
 		},
 		err: ErrNoRoomAvailable(),
 	},
@@ -86,7 +86,7 @@ var endpointCheckTest = []struct {
 		name: "should return number of available rooms",
 		date: time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC),
 		checkEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return CheckResponse{5, nil}, nil
+			return &CheckResponse{5, nil}, nil
 		},
 		want: 5,
 	},
@@ -94,7 +94,7 @@ var endpointCheckTest = []struct {
 		name: "should return an error if the endpoint returns an error",
 		date: time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC),
 		checkEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return CheckResponse{}, ErrNoRoomAvailable()
+			return &CheckResponse{}, ErrNoRoomAvailable()
 		},
 		err: ErrNoRoomAvailable(),
 	},
@@ -161,26 +161,27 @@ var makeBookEndpointTest = []struct {
 	name    string
 	client  RoomsService
 	request interface{}
-	want    BookResponse
+	want    *BookResponse
 	err     error
 }{
 	{
 		name:    "should return the booked room id",
 		client:  mockCorrectClientsService{},
-		request: BookRequest{},
-		want:    BookResponse{1, nil},
+		request: &BookRequest{},
+		want:    &BookResponse{1, nil},
 	},
 	{
 		name:    "should return an error if the request has the wrong structure",
 		client:  mockCorrectClientsService{},
 		request: "jjj.www.ttt",
+		want:    &BookResponse{},
 		err:     ErrInvalidRequestStructure(),
 	},
 	{
 		name:    "should return an error if the endpoint returns an error",
 		client:  mockErrorClientsService{},
-		request: BookRequest{},
-		want:    BookResponse{0, ErrNoRoomAvailable()},
+		request: &BookRequest{},
+		want:    &BookResponse{0, ErrNoRoomAvailable()},
 	},
 }
 
@@ -193,7 +194,7 @@ func TestMakeBookEndpoint(t *testing.T) {
 		endpoint := MakeBookEndpoint(testcase.client)
 		result, err := endpoint(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(BookResponse), testcase.want) {
+		if !reflect.DeepEqual(result.(*BookResponse), testcase.want) {
 			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
 		}
 
@@ -215,26 +216,27 @@ var makeCheckEndpointTest = []struct {
 	name    string
 	client  RoomsService
 	request interface{}
-	want    CheckResponse
+	want    *CheckResponse
 	err     error
 }{
 	{
 		name:    "should return the booked room id",
 		client:  mockCorrectClientsService{},
-		request: CheckRequest{},
-		want:    CheckResponse{5, nil},
+		request: &CheckRequest{},
+		want:    &CheckResponse{5, nil},
 	},
 	{
 		name:    "should return an error if the request has the wrong structure",
 		client:  mockCorrectClientsService{},
 		request: "jjj.www.ttt",
+		want:    &CheckResponse{},
 		err:     ErrInvalidRequestStructure(),
 	},
 	{
 		name:    "should return an error if the endpoint returns an error",
 		client:  mockErrorClientsService{},
-		request: CheckRequest{},
-		want:    CheckResponse{0, ErrNoRoomAvailable()},
+		request: &CheckRequest{},
+		want:    &CheckResponse{0, ErrNoRoomAvailable()},
 	},
 }
 
@@ -247,7 +249,7 @@ func TestMakeCheckEndpoint(t *testing.T) {
 		endpoint := MakeCheckEndpoint(testcase.client)
 		result, err := endpoint(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(CheckResponse), testcase.want) {
+		if !reflect.DeepEqual(result.(*CheckResponse), testcase.want) {
 			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
 		}
 
