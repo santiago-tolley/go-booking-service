@@ -6,11 +6,11 @@ const (
 )
 
 type ErrorWithMsg struct {
-	msg string
+	Msg string `json:"message"`
 }
 
 func (e ErrorWithMsg) Error() string {
-	return e.msg
+	return e.Msg
 }
 
 func ErrInvalidRequestStructure() error {

@@ -3,8 +3,9 @@ package clients
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"testing"
+
+	"gotest.tools/assert"
 
 	"github.com/go-kit/kit/endpoint"
 )
@@ -22,7 +23,7 @@ var endpointAuthorizeTest = []struct {
 		user:     "Jhon",
 		password: "pass",
 		authorizeEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return AuthorizeResponse{"jjj.www.ttt", nil}, nil
+			return &AuthorizeResponse{"jjj.www.ttt", nil}, nil
 		},
 		want: "jjj.www.ttt",
 	},
@@ -53,27 +54,14 @@ func TestEndpointAuthorize(t *testing.T) {
 
 	for _, testcase := range endpointAuthorizeTest {
 		t.Logf(testcase.name)
-
 		endpointMock := Endpoints{
 			AuthorizeEndpoint: testcase.authorizeEndpoint,
 		}
 		result, err := endpointMock.Authorize(context.Background(), testcase.user, testcase.password)
 
-		if !((result != "" && testcase.want != "") || (result == testcase.want)) {
-			t.Errorf("=> Got %v wanted %v", result, testcase.want)
-		}
+		assert.Equal(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
 	}
 }
 
@@ -147,7 +135,7 @@ var endpointValidateTest = []struct {
 		name:  "should return the user in the token",
 		token: "jjj.www.ttt",
 		validateEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return ValidateResponse{"Jhon", nil}, nil
+			return &ValidateResponse{"Jhon", nil}, nil
 		},
 		want: "Jhon",
 	},
@@ -179,24 +167,10 @@ func TestEndpointValidate(t *testing.T) {
 		endpointMock := Endpoints{
 			ValidateEndpoint: testcase.validateEndpoint,
 		}
-
 		result, err := endpointMock.Validate(context.Background(), testcase.token)
 
-		if result != testcase.want {
-			t.Errorf("=> Got %v wanted %v", result, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.Equal(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -232,26 +206,27 @@ var makeAuthorizeEndpointTest = []struct {
 	name    string
 	client  ClientsService
 	request interface{}
-	want    AuthorizeResponse
+	want    *AuthorizeResponse
 	err     error
 }{
 	{
 		name:    "should return the token",
 		client:  mockCorrectClientsService{},
-		request: AuthorizeRequest{},
-		want:    AuthorizeResponse{"jjj.www.ttt", nil},
+		request: &AuthorizeRequest{},
+		want:    &AuthorizeResponse{"jjj.www.ttt", nil},
 	},
 	{
 		name:    "should return an error if the request has the wrong structure",
 		client:  mockCorrectClientsService{},
 		request: "Jhon",
+		want:    &AuthorizeResponse{},
 		err:     ErrInvalidRequestStructure(),
 	},
 	{
 		name:    "should return an error if the endpoint returns an error",
 		client:  mockErrorClientsService{},
-		request: AuthorizeRequest{},
-		want:    AuthorizeResponse{"", ErrInvalidCredentials()},
+		request: &AuthorizeRequest{},
+		want:    &AuthorizeResponse{"", ErrInvalidCredentials()},
 	},
 }
 
@@ -264,21 +239,8 @@ func TestMakeAuthorizeEndpoint(t *testing.T) {
 		endpoint := MakeAuthorizeEndpoint(testcase.client)
 		result, err := endpoint(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(AuthorizeResponse), testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -286,26 +248,27 @@ var makeValidateEndpointTest = []struct {
 	name    string
 	client  ClientsService
 	request interface{}
-	want    ValidateResponse
+	want    *ValidateResponse
 	err     error
 }{
 	{
 		name:    "should return the user",
 		client:  mockCorrectClientsService{},
-		request: ValidateRequest{},
-		want:    ValidateResponse{"Jhon", nil},
+		request: &ValidateRequest{},
+		want:    &ValidateResponse{"Jhon", nil},
 	},
 	{
 		name:    "should return an error if the request has the wrong structure",
 		client:  mockCorrectClientsService{},
 		request: "jjj.www.ttt",
+		want:    &ValidateResponse{},
 		err:     ErrInvalidRequestStructure(),
 	},
 	{
 		name:    "should return an error if the endpoint returns an error",
 		client:  mockErrorClientsService{},
-		request: ValidateRequest{},
-		want:    ValidateResponse{"", ErrUserNotFound()},
+		request: &ValidateRequest{},
+		want:    &ValidateResponse{"", ErrUserNotFound()},
 	},
 }
 
@@ -318,20 +281,7 @@ func TestMakeValidateEndpoint(t *testing.T) {
 		endpoint := MakeValidateEndpoint(testcase.client)
 		result, err := endpoint(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(ValidateResponse), testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }

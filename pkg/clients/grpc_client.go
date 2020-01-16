@@ -46,7 +46,7 @@ func NewGRPCClient(conn *grpc.ClientConn) Endpoints {
 }
 
 func encodeGRPCAuthorizeRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req, ok := request.(AuthorizeRequest)
+	req, ok := request.(*AuthorizeRequest)
 	if !ok {
 		return &pb.AuthorizeRequest{}, ErrInvalidRequestStructure()
 	}
@@ -59,16 +59,16 @@ func encodeGRPCAuthorizeRequest(_ context.Context, request interface{}) (interfa
 func decodeGRPCAuthorizeResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply, ok := grpcReply.(*pb.AuthorizeResponse)
 	if !ok {
-		return AuthorizeResponse{}, ErrInvalidResponseStructure()
+		return &AuthorizeResponse{}, ErrInvalidResponseStructure()
 	}
-	return AuthorizeResponse{
+	return &AuthorizeResponse{
 		Token: reply.Token,
 		Err:   str2err(reply.Error),
 	}, nil
 }
 
 func encodeGRPCValidateRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req, ok := request.(ValidateRequest)
+	req, ok := request.(*ValidateRequest)
 	if !ok {
 		return &pb.ValidateRequest{}, ErrInvalidRequestStructure()
 	}
@@ -80,9 +80,9 @@ func encodeGRPCValidateRequest(_ context.Context, request interface{}) (interfac
 func decodeGRPCValidateResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply, ok := grpcReply.(*pb.ValidateResponse)
 	if !ok {
-		return ValidateResponse{}, ErrInvalidResponseStructure()
+		return &ValidateResponse{}, ErrInvalidResponseStructure()
 	}
-	return ValidateResponse{
+	return &ValidateResponse{
 		User: reply.User,
 		Err:  str2err(reply.Error),
 	}, nil

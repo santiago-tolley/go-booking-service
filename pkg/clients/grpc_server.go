@@ -72,16 +72,16 @@ func (s *GrpcServer) Create(ctx context.Context, req *pb.CreateRequest) (*pb.Cre
 func decodeGRPCAuthorizeRequest(ctx context.Context, grpcReq interface{}) (interface{}, error) {
 	req, ok := grpcReq.(*pb.AuthorizeRequest)
 	if !ok {
-		return AuthorizeRequest{}, ErrInvalidRequestStructure()
+		return &AuthorizeRequest{}, ErrInvalidRequestStructure()
 	}
-	return AuthorizeRequest{
+	return &AuthorizeRequest{
 		User:     req.User,
 		Password: req.Password,
 	}, nil
 }
 
 func encodeGRPCAuthorizeResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp, ok := response.(AuthorizeResponse)
+	resp, ok := response.(*AuthorizeResponse)
 	if !ok {
 		return &pb.AuthorizeResponse{}, ErrInvalidResponseStructure()
 	}
@@ -94,15 +94,15 @@ func encodeGRPCAuthorizeResponse(_ context.Context, response interface{}) (inter
 func decodeGRPCValidateRequest(ctx context.Context, grpcReq interface{}) (interface{}, error) {
 	req, ok := grpcReq.(*pb.ValidateRequest)
 	if !ok {
-		return ValidateRequest{}, ErrInvalidRequestStructure()
+		return &ValidateRequest{}, ErrInvalidRequestStructure()
 	}
-	return ValidateRequest{
+	return &ValidateRequest{
 		Token: req.Token,
 	}, nil
 }
 
 func encodeGRPCValidateResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp, ok := response.(ValidateResponse)
+	resp, ok := response.(*ValidateResponse)
 	if !ok {
 		return &pb.ValidateResponse{}, ErrInvalidResponseStructure()
 	}

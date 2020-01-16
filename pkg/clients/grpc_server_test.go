@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"go-booking-service/pb"
-	"reflect"
 	"testing"
+
+	"gotest.tools/assert"
 )
 
 type grpcAuthorizeCorrectMock struct{}
@@ -108,21 +109,8 @@ func TestGRPCServerAuthorize(t *testing.T) {
 
 		result, err := testcase.server.Authorize(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result, testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -213,21 +201,8 @@ func TestGRPCServerCreate(t *testing.T) {
 
 		result, err := testcase.server.Create(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result, testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -239,39 +214,26 @@ func TestGRPCServerValidate(t *testing.T) {
 
 		result, err := testcase.server.Validate(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result, testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
 var decodeGRPCAuthorizeRequestTest = []struct {
 	name    string
 	request interface{}
-	want    AuthorizeRequest
+	want    *AuthorizeRequest
 	err     error
 }{
 	{
-		name:    "should return the new structure with the token",
+		name:    "should return the new structure with the user information",
 		request: &pb.AuthorizeRequest{User: "John", Password: "pass"},
-		want:    AuthorizeRequest{User: "John", Password: "pass"},
+		want:    &AuthorizeRequest{User: "John", Password: "pass"},
 	},
 	{
 		name:    "should return an error if the request has the wrong structure",
 		request: "jjj.www.ttt",
-		want:    AuthorizeRequest{},
+		want:    &AuthorizeRequest{},
 		err:     ErrInvalidRequestStructure(),
 	},
 }
@@ -284,39 +246,26 @@ func TestDecodeGRPCAuthorizeRequest(t *testing.T) {
 
 		result, err := decodeGRPCAuthorizeRequest(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(AuthorizeRequest), testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
 var decodeGRPCValidateRequestTest = []struct {
 	name    string
 	request interface{}
-	want    ValidateRequest
+	want    *ValidateRequest
 	err     error
 }{
 	{
 		name:    "should return the new structure with the user",
 		request: &pb.ValidateRequest{Token: "Jhon"},
-		want:    ValidateRequest{Token: "Jhon"},
+		want:    &ValidateRequest{Token: "Jhon"},
 	},
 	{
 		name:    "should return an error if the request has the wrong structure",
 		request: "Jhon",
-		want:    ValidateRequest{},
+		want:    &ValidateRequest{},
 		err:     ErrInvalidRequestStructure(),
 	},
 }
@@ -329,21 +278,8 @@ func TestDecodeGRPCValidateRequest(t *testing.T) {
 
 		result, err := decodeGRPCValidateRequest(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(ValidateRequest), testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -374,21 +310,8 @@ func TestDecodeGRPCCreateRequest(t *testing.T) {
 
 		result, err := decodeGRPCCreateRequest(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(CreateRequest), testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -400,7 +323,7 @@ var encodeGRPCAuthorizeResponseTest = []struct {
 }{
 	{
 		name:    "should return the user",
-		request: AuthorizeResponse{Token: "jjj.www.ttt", Err: nil},
+		request: &AuthorizeResponse{Token: "jjj.www.ttt", Err: nil},
 		want:    &pb.AuthorizeResponse{Token: "jjj.www.ttt", Error: ""},
 	},
 	{
@@ -419,21 +342,8 @@ func TestEncodeGRPCAuthorizeResponse(t *testing.T) {
 
 		result, err := encodeGRPCAuthorizeResponse(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(*pb.AuthorizeResponse), testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -445,7 +355,7 @@ var encodeGRPCValidateResponseTest = []struct {
 }{
 	{
 		name:    "should return the user",
-		request: ValidateResponse{User: "John"},
+		request: &ValidateResponse{User: "John"},
 		want:    &pb.ValidateResponse{User: "John"},
 	},
 	{
@@ -464,21 +374,8 @@ func TestEncodeGRPCValidateResponse(t *testing.T) {
 
 		result, err := encodeGRPCValidateResponse(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(*pb.ValidateResponse), testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -509,20 +406,7 @@ func TestEncodeGRPCCreateResponse(t *testing.T) {
 
 		result, err := encodeGRPCCreateResponse(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(*pb.CreateResponse), testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }

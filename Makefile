@@ -22,7 +22,11 @@ dbinit-docker:
 	# dbinit
 
 test:
+	go test -cover ./pkg/clients/
+	go test -cover ./pkg/rooms/
+	go test -cover ./pkg/server/
+	
+test-v:
 	go test -v -cover ./pkg/clients/
 	go test -v -cover ./pkg/rooms/
 	go test -v -cover ./pkg/server/
-	

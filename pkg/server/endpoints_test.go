@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
+	"gotest.tools/assert"
 )
 
 type mockCorrectEndpoint struct{}
@@ -77,7 +78,7 @@ var endpointAuthorizeTest = []struct {
 		user:     "Jhon",
 		password: "pass",
 		authorizeEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return AuthorizeResponse{"jjj.www.ttt", nil}, nil
+			return &AuthorizeResponse{"jjj.www.ttt", nil}, nil
 		},
 		want: "jjj.www.ttt",
 	},
@@ -96,7 +97,7 @@ var endpointAuthorizeTest = []struct {
 		user:     "Jhon",
 		password: "pass",
 		authorizeEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return nil, clients.ErrInvalidCredentials()
+			return &AuthorizeResponse{}, clients.ErrInvalidCredentials()
 		},
 		want: "",
 		err:  clients.ErrInvalidCredentials(),
@@ -114,21 +115,8 @@ func TestEndpointAuthorize(t *testing.T) {
 		}
 		result, err := endpointMock.Authorize(context.Background(), testcase.user, testcase.password)
 
-		if result != testcase.want {
-			t.Errorf("=> Got %v wanted %v", result, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.Equal(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -143,7 +131,7 @@ var endpointValidateTest = []struct {
 		name:  "should return the user",
 		token: "jjj.www.ttt",
 		validateEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return ValidateResponse{"John", nil}, nil
+			return &ValidateResponse{"John", nil}, nil
 		},
 		want: "John",
 	},
@@ -178,21 +166,8 @@ func TestEndpointValidate(t *testing.T) {
 		}
 		result, err := endpointMock.Validate(context.Background(), testcase.token)
 
-		if result != testcase.want {
-			t.Errorf("=> Got %v wanted %v", result, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.Equal(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -209,7 +184,7 @@ var endpointBookTest = []struct {
 		token: "jjj.www.ttt",
 		date:  time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC),
 		bookEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return BookResponse{1, nil}, nil
+			return &BookResponse{1, nil}, nil
 		},
 		want: 1,
 	},
@@ -246,21 +221,8 @@ func TestEndpointBook(t *testing.T) {
 		}
 		result, err := endpointMock.Book(context.Background(), testcase.token, testcase.date)
 
-		if result != testcase.want {
-			t.Errorf("=> Got %v wanted %v", result, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.Equal(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -275,7 +237,7 @@ var endpointCheckTest = []struct {
 		name: "should return the number of available rooms",
 		date: time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC),
 		checkEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return CheckResponse{5, nil}, nil
+			return &CheckResponse{5, nil}, nil
 		},
 		want: 5,
 	},
@@ -310,20 +272,7 @@ func TestEndpointCheck(t *testing.T) {
 		}
 		result, err := endpointMock.Check(context.Background(), testcase.date)
 
-		if result != testcase.want {
-			t.Errorf("=> Got %v wanted %v", result, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.Equal(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }

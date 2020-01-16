@@ -20,7 +20,7 @@ func (e Endpoints) Book(ctx context.Context, token string, date time.Time) (int,
 	if err != nil {
 		return 0, err
 	}
-	response, ok := resp.(BookResponse)
+	response, ok := resp.(*BookResponse)
 	if !ok {
 		return 0, ErrInvalidResponseStructure()
 	}
@@ -32,7 +32,7 @@ func (e Endpoints) Check(ctx context.Context, date time.Time) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	response, ok := resp.(CheckResponse)
+	response, ok := resp.(*CheckResponse)
 	if !ok {
 		return 0, ErrInvalidResponseStructure()
 	}
@@ -44,7 +44,7 @@ func (e Endpoints) Authorize(ctx context.Context, user, password string) (string
 	if err != nil {
 		return "", err
 	}
-	response, ok := resp.(AuthorizeResponse)
+	response, ok := resp.(*AuthorizeResponse)
 	if !ok {
 		return "", ErrInvalidResponseStructure()
 	}
@@ -56,7 +56,7 @@ func (e Endpoints) Validate(ctx context.Context, token string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	response, ok := resp.(ValidateResponse)
+	response, ok := resp.(*ValidateResponse)
 	if !ok {
 		return "", ErrInvalidResponseStructure()
 	}
@@ -89,10 +89,10 @@ func MakeAuthorizeEndpoint(p ServerService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req, ok := request.(AuthorizeRequest)
 		if !ok {
-			return AuthorizeResponse{}, ErrInvalidRequestStructure()
+			return &AuthorizeResponse{}, ErrInvalidRequestStructure()
 		}
 		token, err := p.Authorize(ctx, req.User, req.Password)
-		return AuthorizeResponse{token, err}, nil
+		return &AuthorizeResponse{token, err}, nil
 	}
 }
 
@@ -100,10 +100,10 @@ func MakeValidateEndpoint(p ServerService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req, ok := request.(ValidateRequest)
 		if !ok {
-			return ValidateResponse{}, ErrInvalidRequestStructure()
+			return &ValidateResponse{}, ErrInvalidRequestStructure()
 		}
 		user, err := p.Validate(ctx, req.Token)
-		return ValidateResponse{user, err}, nil
+		return &ValidateResponse{user, err}, nil
 	}
 }
 
@@ -111,10 +111,10 @@ func MakeBookEndpoint(p ServerService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req, ok := request.(BookRequest)
 		if !ok {
-			return BookResponse{}, ErrInvalidRequestStructure()
+			return &BookResponse{}, ErrInvalidRequestStructure()
 		}
 		id, err := p.Book(ctx, req.Token, req.Date)
-		return BookResponse{id, err}, nil
+		return &BookResponse{id, err}, nil
 	}
 }
 
@@ -122,10 +122,10 @@ func MakeCheckEndpoint(p ServerService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req, ok := request.(CheckRequest)
 		if !ok {
-			return CheckResponse{}, ErrInvalidRequestStructure()
+			return &CheckResponse{}, ErrInvalidRequestStructure()
 		}
 		available, err := p.Check(ctx, req.Date)
-		return CheckResponse{available, err}, nil
+		return &CheckResponse{available, err}, nil
 	}
 }
 

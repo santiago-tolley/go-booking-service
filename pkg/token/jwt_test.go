@@ -3,6 +3,8 @@ package token
 import (
 	"testing"
 	"time"
+
+	"gotest.tools/assert"
 )
 
 var encodeTokenTest = []struct {
@@ -38,13 +40,8 @@ func TestEncode(t *testing.T) {
 		jwtEnc := JWTEncoder{}
 		result, err := jwtEnc.Encode(testcase.user, testcase.secret, testcase.exp)
 
-		if result != testcase.want {
-			t.Errorf("=> Got %v wanted %v", result, testcase.want)
-		}
-
-		if err != testcase.err {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.Equal(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -78,20 +75,7 @@ func TestDecode(t *testing.T) {
 		jwtDec := JWTEncoder{}
 		result, err := jwtDec.Decode(testcase.token, testcase.secret)
 
-		if result != testcase.want {
-			t.Errorf("=> Got %v wanted %v", result, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.Equal(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }

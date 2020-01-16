@@ -3,9 +3,10 @@ package rooms
 import (
 	"context"
 	"go-booking-service/pb"
-	"reflect"
 	"testing"
 	"time"
+
+	"gotest.tools/assert"
 )
 
 var encodeGRPCBookRequestTest = []struct {
@@ -16,7 +17,7 @@ var encodeGRPCBookRequestTest = []struct {
 }{
 	{
 		name:    "should return the values in the pb structure",
-		request: BookRequest{Token: "jjj.www.ttt", Date: time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC)},
+		request: &BookRequest{Token: "jjj.www.ttt", Date: time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC)},
 		want:    &pb.BookRequest{Token: "jjj.www.ttt", Date: time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC).Unix()},
 	},
 	{
@@ -35,21 +36,8 @@ func TestEncodeGRPCBookRequest(t *testing.T) {
 
 		result, err := encodeGRPCBookRequest(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(*pb.BookRequest), testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -61,7 +49,7 @@ var encodeGRPCCheckRequestTest = []struct {
 }{
 	{
 		name:    "should return the values in the pb structure",
-		request: CheckRequest{Date: time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC)},
+		request: &CheckRequest{Date: time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC)},
 		want:    &pb.CheckRequest{Date: time.Date(2020, 6, 13, 12, 0, 0, 0, time.UTC).Unix()},
 	},
 	{
@@ -80,39 +68,26 @@ func TestEncodeGRPCCheckRequest(t *testing.T) {
 
 		result, err := encodeGRPCCheckRequest(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(*pb.CheckRequest), testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
 var decodeGRPCBookResponseTest = []struct {
 	name    string
 	request interface{}
-	want    BookResponse
+	want    *BookResponse
 	err     error
 }{
 	{
 		name:    "should return the values in the internal structure",
 		request: &pb.BookResponse{Id: 1, Error: ""},
-		want:    BookResponse{Id: 1, Err: nil},
+		want:    &BookResponse{Id: 1, Err: nil},
 	},
 	{
 		name:    "should return an error if the request has the wrong structure",
 		request: "jjj.www.ttt",
-		want:    BookResponse{},
+		want:    &BookResponse{},
 		err:     ErrInvalidResponseStructure(),
 	},
 }
@@ -125,39 +100,26 @@ func TestDecodeGRPCBookResponse(t *testing.T) {
 
 		result, err := decodeGRPCBookResponse(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(BookResponse), testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
 var decodeGRPCCheckResponseTest = []struct {
 	name    string
 	request interface{}
-	want    CheckResponse
+	want    *CheckResponse
 	err     error
 }{
 	{
 		name:    "should return the values in the internal structure",
 		request: &pb.CheckResponse{Available: 5, Error: ""},
-		want:    CheckResponse{Available: 5, Err: nil},
+		want:    &CheckResponse{Available: 5, Err: nil},
 	},
 	{
 		name:    "should return an error if the request has the wrong structure",
 		request: "Jhon",
-		want:    CheckResponse{},
+		want:    &CheckResponse{},
 		err:     ErrInvalidResponseStructure(),
 	},
 }
@@ -170,20 +132,7 @@ func TestDecodeGRPCCheckResponse(t *testing.T) {
 
 		result, err := decodeGRPCCheckResponse(context.Background(), testcase.request)
 
-		if !reflect.DeepEqual(result.(CheckResponse), testcase.want) {
-			t.Errorf("=> Got %v (%T) wanted %v (%T)", result, result, testcase.want, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }

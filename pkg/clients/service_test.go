@@ -12,6 +12,8 @@ import (
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"gotest.tools/assert"
 )
 
 var testDB *mongo.Database
@@ -104,21 +106,8 @@ func TestAuthorize(t *testing.T) {
 		c := clientsService{testcase.encoder, testDB}
 		result, err := c.Authorize(context.Background(), testcase.user, testcase.password)
 
-		if !((result != "" && testcase.want != "") || (result == testcase.want)) {
-			t.Errorf("=> Got %v wanted %v", result, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.Equal(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -160,21 +149,8 @@ func TestValidate(t *testing.T) {
 		c := clientsService{testcase.decoder, testDB}
 		result, err := c.Validate(context.Background(), testcase.token)
 
-		if result != testcase.want {
-			t.Errorf("=> Got %v wanted %v", result, testcase.want)
-		}
-
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.Equal(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }
 
@@ -212,16 +188,6 @@ func TestCreate(t *testing.T) {
 		c := clientsService{mockCorrectEncoderDecoder{}, testDB}
 		err := c.Create(context.Background(), testcase.user, testcase.password)
 
-		var ok bool
-		if testcase.err != nil {
-			if err == testcase.err {
-				ok = true
-			}
-		} else if err == nil {
-			ok = true
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
+		assert.DeepEqual(t, err, testcase.err)
 	}
 }

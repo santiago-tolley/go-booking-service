@@ -55,9 +55,9 @@ func (s *GrpcServer) Check(ctx context.Context, req *pb.CheckRequest) (*pb.Check
 func decodeGRPCBookRequest(ctx context.Context, grpcReq interface{}) (interface{}, error) {
 	req, ok := grpcReq.(*pb.BookRequest)
 	if !ok {
-		return BookRequest{}, ErrInvalidRequestStructure()
+		return &BookRequest{}, ErrInvalidRequestStructure()
 	}
-	return BookRequest{
+	return &BookRequest{
 		Token: req.Token,
 		Date:  time.Unix(req.Date, 0).UTC(),
 	}, nil
@@ -66,15 +66,15 @@ func decodeGRPCBookRequest(ctx context.Context, grpcReq interface{}) (interface{
 func decodeGRPCCheckRequest(ctx context.Context, grpcReq interface{}) (interface{}, error) {
 	req, ok := grpcReq.(*pb.CheckRequest)
 	if !ok {
-		return CheckRequest{}, ErrInvalidRequestStructure()
+		return &CheckRequest{}, ErrInvalidRequestStructure()
 	}
-	return CheckRequest{
+	return &CheckRequest{
 		Date: time.Unix(req.Date, 0).UTC(),
 	}, nil
 }
 
 func encodeGRPCBookResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp, ok := response.(BookResponse)
+	resp, ok := response.(*BookResponse)
 	if !ok {
 		return &pb.BookResponse{}, ErrInvalidResponseStructure()
 	}
@@ -85,7 +85,7 @@ func encodeGRPCBookResponse(_ context.Context, response interface{}) (interface{
 }
 
 func encodeGRPCCheckResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp, ok := response.(CheckResponse)
+	resp, ok := response.(*CheckResponse)
 	if !ok {
 		return &pb.CheckResponse{}, ErrInvalidResponseStructure()
 	}

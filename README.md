@@ -62,7 +62,7 @@ go run cmd/rooms/main.go
 ```
 The Server service listens on port 8080 (HTTP)
 The Clients service listens on port 8082 (gRPC)
-The Rooms service listens on port 8082 (gRPC)
+The Rooms service listens on port 8081 (gRPC)
 
 
 ## Calling the Proxy
