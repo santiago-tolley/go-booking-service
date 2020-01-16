@@ -35,10 +35,10 @@ func (c clientsService) Authorize(ctx context.Context, user, password string) (s
 		User     string
 		Password string
 	}{}
-	filter := bson.D{{user, password}}
+	filter := bson.D{{"user", user}}
 	err := users.FindOne(context.Background(), filter).Decode(&result)
 	if err != nil {
-		return "", err
+		return "", ErrInvalidCredentials()
 	}
 
 	if result.Password != password {
@@ -57,9 +57,17 @@ func (c clientsService) Validate(ctx context.Context, token string) (string, err
 	if err != nil {
 		return "", err
 	}
-	// if _, ok := c.users[user]; !ok {
-	// 	return "", ErrUserNotFound()
-	// }
+
+	users := c.db.Collection(commons.MongoClientCollection)
+	result := struct {
+		User     string
+		Password string
+	}{}
+	filter := bson.D{{"user", user}}
+	err = users.FindOne(context.Background(), filter).Decode(&result)
+	if err != nil {
+		return "", ErrUserNotFound()
+	}
 
 	return user, err
 }
@@ -67,7 +75,16 @@ func (c clientsService) Validate(ctx context.Context, token string) (string, err
 func (c clientsService) Create(ctx context.Context, user, password string) error {
 
 	users := c.db.Collection(commons.MongoClientCollection)
-	_, err := users.InsertOne(context.Background(), bson.M{user: password})
+	result := struct {
+		User     string
+		Password string
+	}{}
+	filter := bson.D{{"user", user}}
+	err := users.FindOne(context.Background(), filter).Decode(&result)
+	if err == nil {
+		return ErrUserExists()
+	}
+	_, err = users.InsertOne(context.Background(), bson.M{user: password})
 	if err != nil {
 		return err
 	}

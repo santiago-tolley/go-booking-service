@@ -46,6 +46,16 @@ func (m mockCorrectEncoderDecoder) Decode(token, secret string) (string, error) 
 	return "John", nil
 }
 
+type mockCorrectNotFoundDecoder struct{}
+
+func (m mockCorrectNotFoundDecoder) Encode(user, secret string, date time.Time) (string, error) {
+	return "jjj.www.ttt", nil
+}
+
+func (m mockCorrectNotFoundDecoder) Decode(token, secret string) (string, error) {
+	return "Charles", nil
+}
+
 type mockErrorEncoderDecoder struct{}
 
 func (m mockErrorEncoderDecoder) Encode(user, secret string, date time.Time) (string, error) {
@@ -69,7 +79,7 @@ var authorizeTest = []struct {
 		user:     "John",
 		password: "pass",
 		encoder:  mockCorrectEncoderDecoder{},
-		want:     "John",
+		want:     "jjj.www.ttt",
 	},
 	{
 		name:     "should return an error if the user doesn't exist",
@@ -120,20 +130,20 @@ var validateTest = []struct {
 }{
 	{
 		name:    "should return the user in the token",
-		token:   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjM3NTM4NjQwMDAsInVzZXIiOiJKaG9uIn0.VZM7zFwJlaBvHNQHAXu-FE30cy8agg2WdvXqygQUGOc",
+		token:   "jjj.www.ttt",
 		decoder: mockCorrectEncoderDecoder{},
 		want:    "John",
 	},
 	{
 		name:    "should return an error if the user doesn't exist",
-		token:   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjM3NTM4NjQwMDAsInVzZXIiOiJKaG9uIn0.VZM7zFwJlaBvHNQHAXu-FE30cy8agg2WdvXqygQUGOc",
-		decoder: mockCorrectEncoderDecoder{},
+		token:   "jjj.www.ttt",
+		decoder: mockCorrectNotFoundDecoder{},
 		want:    "",
 		err:     ErrUserNotFound(),
 	},
 	{
 		name:    "should return an error if the token is invalid",
-		token:   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjM3NTM4NjQwMDAsInVzZXIiOiJKaG9uIn0.VZM7zFwJlaBvHNQHAXu-FE30cy8agg2WdvXqygQUGOc",
+		token:   "jjj.www.ttt",
 		decoder: mockErrorEncoderDecoder{},
 		want:    "",
 		err:     jwt.ErrInvalidToken(),
@@ -162,20 +172,14 @@ var createTest = []struct {
 }{
 	{
 		name:     "should return the error",
-		user:     "John",
-		password: "pass",
+		user:     "Charles",
+		password: "pass2",
 	},
 	{
-		name:     "should return an error if the user doesn't exist",
+		name:     "should return an error if the user already exists",
 		user:     "John",
 		password: "pass",
-		err:      ErrUserNotFound(),
-	},
-	{
-		name:     "should return an error if the token is invalid",
-		user:     "John",
-		password: "pass",
-		err:      jwt.ErrInvalidToken(),
+		err:      ErrUserExists(),
 	},
 }
 

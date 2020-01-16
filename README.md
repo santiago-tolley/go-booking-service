@@ -12,6 +12,11 @@ The project is divided in various micoservices:
 
 The services communicate via gRPC.
 
+JSON Web Tokens used for authentication look like the following:
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjM3NTM4NjQwMDAsInVzZXIiOiJDaGFybGVzIn0.G6W-WSfOoBxq7Be1bGqgKvYFb_toMdzbCZmT1n6PzVA
+```
+
 ## Installation
 
 ### Clone the repository
