@@ -37,6 +37,22 @@ go build cmd/rooms/main.go
 go build cmd/server/main.go
 ```
 
+### Set up the database
+Create the client user:
+```
+mongo
+use clients-service
+db.createUser({user: "clients-service", pwd: "clients-service", roles: [{role: "readWrite", db: "clients-service"}]})
+```
+
+Create the room user:
+```
+mongo
+use rooms-service
+db.createUser({user: "rooms-service", pwd: "rooms-service", roles: [{role: "readWrite", db: "rooms-service"}]})
+```
+
+
 ## Running the Services
 Start the services with the following commands:
 ```

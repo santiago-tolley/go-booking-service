@@ -29,9 +29,19 @@ func NewGRPCClient(conn *grpc.ClientConn) Endpoints {
 		pb.ValidateResponse{},
 	).Endpoint()
 
+	createEndpoint := grpctransport.NewClient(
+		conn,
+		"pb.Clients",
+		"Create",
+		encodeGRPCCreateRequest,
+		decodeGRPCCreateResponse,
+		pb.CreateResponse{},
+	).Endpoint()
+
 	return Endpoints{
 		AuthorizeEndpoint: authorizeEndpoint,
 		ValidateEndpoint:  validateEndpoint,
+		CreateEndpoint:    createEndpoint,
 	}
 }
 
@@ -75,6 +85,27 @@ func decodeGRPCValidateResponse(_ context.Context, grpcReply interface{}) (inter
 	return ValidateResponse{
 		User: reply.User,
 		Err:  str2err(reply.Error),
+	}, nil
+}
+
+func encodeGRPCCreateRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req, ok := request.(CreateRequest)
+	if !ok {
+		return &pb.CreateRequest{}, ErrInvalidRequestStructure()
+	}
+	return &pb.CreateRequest{
+		User:     req.User,
+		Password: req.Password,
+	}, nil
+}
+
+func decodeGRPCCreateResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply, ok := grpcReply.(*pb.CreateResponse)
+	if !ok {
+		return CreateResponse{}, ErrInvalidResponseStructure()
+	}
+	return CreateResponse{
+		Err: str2err(reply.Error),
 	}, nil
 }
 

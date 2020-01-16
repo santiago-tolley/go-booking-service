@@ -4,16 +4,20 @@ import (
 	"context"
 	"go-booking-service/commons"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type ClientsService interface {
 	Authorize(context.Context, string, string) (string, error)
 	Validate(context.Context, string) (string, error)
+	Create(context.Context, string, string) error
 }
 
 type clientsService struct {
 	encoder EncoderDecoder
-	users   map[string]string
+	db      *mongo.Database
 }
 
 type EncoderDecoder interface {
@@ -21,12 +25,23 @@ type EncoderDecoder interface {
 	Decode(string, string) (string, error)
 }
 
-func NewClientsServer(e EncoderDecoder, users map[string]string) ClientsService {
-	return clientsService{e, users}
+func NewClientsServer(e EncoderDecoder, db *mongo.Database) ClientsService {
+	return clientsService{e, db}
 }
 
 func (c clientsService) Authorize(ctx context.Context, user, password string) (string, error) {
-	if c.users[user] != password {
+	users := c.db.Collection(commons.MongoClientCollection)
+	result := struct {
+		User     string
+		Password string
+	}{}
+	filter := bson.D{{user, password}}
+	err := users.FindOne(context.Background(), filter).Decode(&result)
+	if err != nil {
+		return "", err
+	}
+
+	if result.Password != password {
 		return "", ErrInvalidCredentials()
 	}
 
@@ -42,9 +57,21 @@ func (c clientsService) Validate(ctx context.Context, token string) (string, err
 	if err != nil {
 		return "", err
 	}
-	if _, ok := c.users[user]; !ok {
-		return "", ErrUserNotFound()
-	}
+	// if _, ok := c.users[user]; !ok {
+	// 	return "", ErrUserNotFound()
+	// }
 
 	return user, err
+}
+
+func (c clientsService) Create(ctx context.Context, user, password string) error {
+
+	users := c.db.Collection(commons.MongoClientCollection)
+	_, err := users.InsertOne(context.Background(), bson.M{user: password})
+	if err != nil {
+		return err
+	}
+	// id := res.InsertedID
+
+	return nil
 }

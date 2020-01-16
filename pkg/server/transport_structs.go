@@ -40,6 +40,15 @@ type ValidateResponse struct {
 	Err  error  `json:"err"`
 }
 
+type CreateRequest struct {
+	User     string `json:"user"`
+	Password string `json:"password"`
+}
+
+type CreateResponse struct {
+	Err error `json:"err"`
+}
+
 func (r AuthorizeResponse) Failed() error {
 	return r.Err
 }
@@ -53,5 +62,9 @@ func (r BookResponse) Failed() error {
 }
 
 func (r CheckResponse) Failed() error {
+	return r.Err
+}
+
+func (r CreateResponse) Failed() error {
 	return r.Err
 }

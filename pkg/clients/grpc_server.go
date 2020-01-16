@@ -10,6 +10,7 @@ import (
 type GrpcServer struct {
 	authorize grpctransport.Handler
 	validate  grpctransport.Handler
+	create    grpctransport.Handler
 }
 
 func NewGRPCServer(endpoints Endpoints) *GrpcServer {
@@ -23,6 +24,11 @@ func NewGRPCServer(endpoints Endpoints) *GrpcServer {
 			endpoints.ValidateEndpoint,
 			decodeGRPCValidateRequest,
 			encodeGRPCValidateResponse,
+		),
+		create: grpctransport.NewServer(
+			endpoints.CreateEndpoint,
+			decodeGRPCCreateRequest,
+			encodeGRPCCreateResponse,
 		),
 	}
 }
@@ -47,6 +53,18 @@ func (s *GrpcServer) Validate(ctx context.Context, req *pb.ValidateRequest) (*pb
 	response, ok := resp.(*pb.ValidateResponse)
 	if !ok {
 		return &pb.ValidateResponse{}, ErrInvalidResponseStructure()
+	}
+	return response, nil
+}
+
+func (s *GrpcServer) Create(ctx context.Context, req *pb.CreateRequest) (*pb.CreateResponse, error) {
+	_, resp, err := s.create.ServeGRPC(ctx, req)
+	if err != nil {
+		return &pb.CreateResponse{}, err
+	}
+	response, ok := resp.(*pb.CreateResponse)
+	if !ok {
+		return &pb.CreateResponse{}, ErrInvalidResponseStructure()
 	}
 	return response, nil
 }
@@ -90,6 +108,27 @@ func encodeGRPCValidateResponse(_ context.Context, response interface{}) (interf
 	}
 	return &pb.ValidateResponse{
 		User:  resp.User,
+		Error: err2str(resp.Err),
+	}, nil
+}
+
+func decodeGRPCCreateRequest(ctx context.Context, grpcReq interface{}) (interface{}, error) {
+	req, ok := grpcReq.(*pb.CreateRequest)
+	if !ok {
+		return CreateRequest{}, ErrInvalidRequestStructure()
+	}
+	return CreateRequest{
+		User:     req.User,
+		Password: req.Password,
+	}, nil
+}
+
+func encodeGRPCCreateResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp, ok := response.(CreateResponse)
+	if !ok {
+		return &pb.CreateResponse{}, ErrInvalidResponseStructure()
+	}
+	return &pb.CreateResponse{
 		Error: err2str(resp.Err),
 	}, nil
 }

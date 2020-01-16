@@ -42,6 +42,12 @@ func NewHTTPHandler(endpoint Endpoints) http.Handler {
 		encodeHTTPGenericResponse,
 	))
 
+	m.Methods("POST").Path("/create/").Handler(httptransport.NewServer(
+		endpoint.CreateEndpoint,
+		decodeHTTPCreateRequest,
+		encodeHTTPGenericResponse,
+	))
+
 	return m
 }
 
@@ -72,6 +78,12 @@ func decodeHTTPAuthorizeRequest(_ context.Context, r *http.Request) (interface{}
 
 func decodeHTTPValidateRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var req = ValidateRequest{}
+	err := json.NewDecoder(r.Body).Decode(&req)
+	return req, err
+}
+
+func decodeHTTPCreateRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req = CreateRequest{}
 	err := json.NewDecoder(r.Body).Decode(&req)
 	return req, err
 }

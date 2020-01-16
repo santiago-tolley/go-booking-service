@@ -8,6 +8,7 @@ import (
 type ClientsService interface {
 	Authorize(context.Context, string, string) (string, error)
 	Validate(context.Context, string) (string, error)
+	Create(context.Context, string, string) error
 }
 
 type RoomService interface {
@@ -32,6 +33,11 @@ func (p ServerService) Authorize(ctx context.Context, user, password string) (st
 func (p ServerService) Validate(ctx context.Context, token string) (string, error) {
 	user, err := p.ClientsClient.Validate(ctx, token)
 	return user, err
+}
+
+func (p ServerService) Create(ctx context.Context, user, password string) error {
+	err := p.ClientsClient.Create(ctx, user, password)
+	return err
 }
 
 func (p ServerService) Book(ctx context.Context, token string, date time.Time) (int, error) {

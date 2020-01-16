@@ -12,6 +12,7 @@ type Endpoints struct {
 	ValidateEndpoint  endpoint.Endpoint
 	BookEndpoint      endpoint.Endpoint
 	CheckEndpoint     endpoint.Endpoint
+	CreateEndpoint    endpoint.Endpoint
 }
 
 func (e Endpoints) Book(ctx context.Context, token string, date time.Time) (int, error) {
@@ -62,12 +63,25 @@ func (e Endpoints) Validate(ctx context.Context, token string) (string, error) {
 	return response.User, response.Err
 }
 
+func (e Endpoints) Create(ctx context.Context, user, password string) error {
+	resp, err := e.CreateEndpoint(ctx, CreateRequest{User: user, Password: password})
+	if err != nil {
+		return err
+	}
+	response, ok := resp.(CreateResponse)
+	if !ok {
+		return ErrInvalidResponseStructure()
+	}
+	return response.Err
+}
+
 func MakeEndpoints(p ServerService) Endpoints {
 	return Endpoints{
 		AuthorizeEndpoint: MakeAuthorizeEndpoint(p),
 		ValidateEndpoint:  MakeValidateEndpoint(p),
 		BookEndpoint:      MakeBookEndpoint(p),
 		CheckEndpoint:     MakeCheckEndpoint(p),
+		CreateEndpoint:    MakeCreateEndpoint(p),
 	}
 }
 
@@ -112,5 +126,16 @@ func MakeCheckEndpoint(p ServerService) endpoint.Endpoint {
 		}
 		available, err := p.Check(ctx, req.Date)
 		return CheckResponse{available, err}, nil
+	}
+}
+
+func MakeCreateEndpoint(p ServerService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req, ok := request.(CreateRequest)
+		if !ok {
+			return CreateResponse{}, ErrInvalidRequestStructure()
+		}
+		err := p.Create(ctx, req.User, req.Password)
+		return CreateResponse{err}, nil
 	}
 }

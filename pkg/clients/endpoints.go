@@ -9,6 +9,7 @@ import (
 type Endpoints struct {
 	AuthorizeEndpoint endpoint.Endpoint
 	ValidateEndpoint  endpoint.Endpoint
+	CreateEndpoint    endpoint.Endpoint
 }
 
 func (e Endpoints) Authorize(ctx context.Context, user, password string) (string, error) {
@@ -37,10 +38,24 @@ func (e Endpoints) Validate(ctx context.Context, token string) (string, error) {
 	return response.User, response.Err
 }
 
+func (e Endpoints) Create(ctx context.Context, user, password string) error {
+	resp, err := e.CreateEndpoint(ctx, CreateRequest{User: user, Password: password})
+	if err != nil {
+		return err
+	}
+	response, ok := resp.(CreateResponse)
+	if !ok {
+		return ErrInvalidResponseStructure()
+	}
+
+	return response.Err
+}
+
 func MakeEndpoints(c ClientsService) Endpoints {
 	return Endpoints{
 		AuthorizeEndpoint: MakeAuthorizeEndpoint(c),
 		ValidateEndpoint:  MakeValidateEndpoint(c),
+		CreateEndpoint:    MakeCreateEndpoint(c),
 	}
 }
 
@@ -65,5 +80,17 @@ func MakeValidateEndpoint(c ClientsService) endpoint.Endpoint {
 
 		user, err := c.Validate(ctx, req.Token)
 		return ValidateResponse{user, err}, nil
+	}
+}
+
+func MakeCreateEndpoint(c ClientsService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req, ok := request.(CreateRequest)
+		if !ok {
+			return CreateResponse{}, ErrInvalidRequestStructure()
+		}
+
+		err := c.Create(ctx, req.User, req.Password)
+		return CreateResponse{err}, nil
 	}
 }

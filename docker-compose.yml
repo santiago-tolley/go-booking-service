@@ -1,0 +1,20 @@
+version: '3.5'
+services:
+    database:
+        image: 'mongo'
+        container_name: 'booking_db'
+        environment:
+            # - MONGO_INITDB_DATABASE=clients
+            # - MONGO_INITDB_ROOT_USERNAME=clients
+            # - MONGO_INITDB_ROOT_PASSWORD=clients
+            - MONGO_CLIENTS_DATABASE=clients-service
+            - MONGO_CLIENTS_ROOT_USERNAME=clients
+            - MONGO_CLIENTS_ROOT_PASSWORD=clients
+            - MONGO_ROOMS_DATABASE=rooms-service
+            - MONGO_ROOMS_ROOT_USERNAME=rooms-service
+            - MONGO_ROOMS_ROOT_PASSWORD=rooms-service
+        volumes:
+            # - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo-js:ro
+            - ./booking-volume:/data/db
+        ports:
+            - '27017-27019:27017-27019'
