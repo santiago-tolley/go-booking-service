@@ -2,7 +2,6 @@ package clients
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-kit/kit/endpoint"
 )
@@ -40,9 +39,7 @@ func (e Endpoints) Validate(ctx context.Context, token string) (string, error) {
 }
 
 func (e Endpoints) Create(ctx context.Context, user, password string) error {
-	fmt.Printf("gets here 1\n")
 	resp, err := e.CreateEndpoint(ctx, &CreateRequest{User: user, Password: password})
-	fmt.Printf("gets here 2 %v\n", err)
 	if err != nil {
 		return err
 	}
@@ -88,9 +85,7 @@ func MakeValidateEndpoint(c ClientsService) endpoint.Endpoint {
 
 func MakeCreateEndpoint(c ClientsService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		fmt.Printf("gets here 3\n")
 		req, ok := request.(*CreateRequest)
-		fmt.Printf("gets here > err > %v\n", ok)
 		if !ok {
 			return &CreateResponse{}, ErrInvalidRequestStructure()
 		}
