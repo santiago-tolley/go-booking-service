@@ -89,7 +89,7 @@ func decodeGRPCValidateResponse(_ context.Context, grpcReply interface{}) (inter
 }
 
 func encodeGRPCCreateRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req, ok := request.(CreateRequest)
+	req, ok := request.(*CreateRequest)
 	if !ok {
 		return &pb.CreateRequest{}, ErrInvalidRequestStructure()
 	}
@@ -102,9 +102,9 @@ func encodeGRPCCreateRequest(_ context.Context, request interface{}) (interface{
 func decodeGRPCCreateResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply, ok := grpcReply.(*pb.CreateResponse)
 	if !ok {
-		return CreateResponse{}, ErrInvalidResponseStructure()
+		return &CreateResponse{}, ErrInvalidResponseStructure()
 	}
-	return CreateResponse{
+	return &CreateResponse{
 		Err: str2err(reply.Error),
 	}, nil
 }
@@ -121,6 +121,8 @@ func str2err(s string) error {
 		return ErrInvalidToken()
 	case UserNotFound:
 		return ErrUserNotFound()
+	case UserExists:
+		return ErrUserExists()
 	default:
 		return errors.New(s)
 	}

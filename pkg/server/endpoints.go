@@ -16,7 +16,7 @@ type Endpoints struct {
 }
 
 func (e Endpoints) Book(ctx context.Context, token string, date time.Time) (int, error) {
-	resp, err := e.BookEndpoint(ctx, BookRequest{Token: token, Date: date})
+	resp, err := e.BookEndpoint(ctx, &BookRequest{Token: token, Date: date})
 	if err != nil {
 		return 0, err
 	}
@@ -28,7 +28,7 @@ func (e Endpoints) Book(ctx context.Context, token string, date time.Time) (int,
 }
 
 func (e Endpoints) Check(ctx context.Context, date time.Time) (int, error) {
-	resp, err := e.CheckEndpoint(ctx, CheckRequest{Date: date})
+	resp, err := e.CheckEndpoint(ctx, &CheckRequest{Date: date})
 	if err != nil {
 		return 0, err
 	}
@@ -40,7 +40,7 @@ func (e Endpoints) Check(ctx context.Context, date time.Time) (int, error) {
 }
 
 func (e Endpoints) Authorize(ctx context.Context, user, password string) (string, error) {
-	resp, err := e.AuthorizeEndpoint(ctx, AuthorizeRequest{User: user, Password: password})
+	resp, err := e.AuthorizeEndpoint(ctx, &AuthorizeRequest{User: user, Password: password})
 	if err != nil {
 		return "", err
 	}
@@ -52,7 +52,7 @@ func (e Endpoints) Authorize(ctx context.Context, user, password string) (string
 }
 
 func (e Endpoints) Validate(ctx context.Context, token string) (string, error) {
-	resp, err := e.ValidateEndpoint(ctx, ValidateRequest{Token: token})
+	resp, err := e.ValidateEndpoint(ctx, &ValidateRequest{Token: token})
 	if err != nil {
 		return "", err
 	}
@@ -64,11 +64,11 @@ func (e Endpoints) Validate(ctx context.Context, token string) (string, error) {
 }
 
 func (e Endpoints) Create(ctx context.Context, user, password string) error {
-	resp, err := e.CreateEndpoint(ctx, CreateRequest{User: user, Password: password})
+	resp, err := e.CreateEndpoint(ctx, &CreateRequest{User: user, Password: password})
 	if err != nil {
 		return err
 	}
-	response, ok := resp.(CreateResponse)
+	response, ok := resp.(*CreateResponse)
 	if !ok {
 		return ErrInvalidResponseStructure()
 	}
@@ -87,7 +87,7 @@ func MakeEndpoints(p ServerService) Endpoints {
 
 func MakeAuthorizeEndpoint(p ServerService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req, ok := request.(AuthorizeRequest)
+		req, ok := request.(*AuthorizeRequest)
 		if !ok {
 			return &AuthorizeResponse{}, ErrInvalidRequestStructure()
 		}
@@ -98,7 +98,7 @@ func MakeAuthorizeEndpoint(p ServerService) endpoint.Endpoint {
 
 func MakeValidateEndpoint(p ServerService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req, ok := request.(ValidateRequest)
+		req, ok := request.(*ValidateRequest)
 		if !ok {
 			return &ValidateResponse{}, ErrInvalidRequestStructure()
 		}
@@ -109,7 +109,7 @@ func MakeValidateEndpoint(p ServerService) endpoint.Endpoint {
 
 func MakeBookEndpoint(p ServerService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req, ok := request.(BookRequest)
+		req, ok := request.(*BookRequest)
 		if !ok {
 			return &BookResponse{}, ErrInvalidRequestStructure()
 		}
@@ -120,7 +120,7 @@ func MakeBookEndpoint(p ServerService) endpoint.Endpoint {
 
 func MakeCheckEndpoint(p ServerService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req, ok := request.(CheckRequest)
+		req, ok := request.(*CheckRequest)
 		if !ok {
 			return &CheckResponse{}, ErrInvalidRequestStructure()
 		}
@@ -131,11 +131,11 @@ func MakeCheckEndpoint(p ServerService) endpoint.Endpoint {
 
 func MakeCreateEndpoint(p ServerService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req, ok := request.(CreateRequest)
+		req, ok := request.(*CreateRequest)
 		if !ok {
-			return CreateResponse{}, ErrInvalidRequestStructure()
+			return &CreateResponse{}, ErrInvalidRequestStructure()
 		}
 		err := p.Create(ctx, req.User, req.Password)
-		return CreateResponse{err}, nil
+		return &CreateResponse{err}, nil
 	}
 }

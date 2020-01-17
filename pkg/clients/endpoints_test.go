@@ -2,7 +2,6 @@ package clients
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"gotest.tools/assert"
@@ -65,65 +64,6 @@ func TestEndpointAuthorize(t *testing.T) {
 	}
 }
 
-var endpointCreateTest = []struct {
-	name           string
-	user           string
-	password       string
-	createEndpoint endpoint.Endpoint
-	err            error
-}{
-	{
-		name:     "should return the error",
-		user:     "Jhon",
-		password: "pass",
-		createEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return CreateResponse{fmt.Errorf("error!")}, nil
-		},
-		err: fmt.Errorf("error!"),
-	},
-	{
-		name:     "should return an error if the response has the wrong structure",
-		user:     "Charles",
-		password: "pass",
-		createEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return fmt.Errorf("error!"), nil
-		},
-		err: ErrInvalidResponseStructure(),
-	},
-	{
-		name:     "should return an error if the endpoint returns an error",
-		user:     "Jhon",
-		password: "pass",
-		createEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
-			return nil, ErrInvalidCredentials()
-		},
-		err: ErrInvalidCredentials(),
-	},
-}
-
-func TestEndpointCreate(t *testing.T) {
-	t.Log("EndpointCreate")
-
-	for _, testcase := range endpointCreateTest {
-		t.Logf(testcase.name)
-
-		endpointMock := Endpoints{
-			CreateEndpoint: testcase.createEndpoint,
-		}
-		err := endpointMock.Create(context.Background(), testcase.user, testcase.password)
-
-		var ok bool
-		if testcase.err != nil {
-			ok = err.Error() == testcase.err.Error()
-		} else {
-			ok = err == nil
-		}
-		if !ok {
-			t.Errorf("=> Got %v wanted %v", err, testcase.err)
-		}
-	}
-}
-
 var endpointValidateTest = []struct {
 	name             string
 	token            string
@@ -174,6 +114,57 @@ func TestEndpointValidate(t *testing.T) {
 	}
 }
 
+var endpointCreateTest = []struct {
+	name           string
+	user           string
+	password       string
+	createEndpoint endpoint.Endpoint
+	err            error
+}{
+	{
+		name:     "should return the error",
+		user:     "Jhon",
+		password: "pass",
+		createEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
+			return &CreateResponse{ErrUserExists()}, nil
+		},
+		err: ErrUserExists(),
+	},
+	{
+		name:     "should return an error if the response has the wrong structure",
+		user:     "Charles",
+		password: "pass",
+		createEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
+			return ErrUserExists(), nil
+		},
+		err: ErrInvalidResponseStructure(),
+	},
+	{
+		name:     "should return an error if the endpoint returns an error",
+		user:     "Jhon",
+		password: "pass",
+		createEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
+			return nil, ErrInvalidCredentials()
+		},
+		err: ErrInvalidCredentials(),
+	},
+}
+
+func TestEndpointCreate(t *testing.T) {
+	t.Log("EndpointCreate")
+
+	for _, testcase := range endpointCreateTest {
+		t.Logf(testcase.name)
+
+		endpointMock := Endpoints{
+			CreateEndpoint: testcase.createEndpoint,
+		}
+		err := endpointMock.Create(context.Background(), testcase.user, testcase.password)
+
+		assert.DeepEqual(t, err, testcase.err)
+	}
+}
+
 type mockCorrectClientsService struct{}
 
 func (m mockCorrectClientsService) Authorize(ctx context.Context, user, password string) (string, error) {
@@ -185,7 +176,7 @@ func (m mockCorrectClientsService) Validate(ctx context.Context, token string) (
 }
 
 func (m mockCorrectClientsService) Create(ctx context.Context, user, password string) error {
-	return nil
+	return ErrUserExists()
 }
 
 type mockErrorClientsService struct{}
@@ -279,6 +270,48 @@ func TestMakeValidateEndpoint(t *testing.T) {
 		t.Logf(testcase.name)
 
 		endpoint := MakeValidateEndpoint(testcase.client)
+		result, err := endpoint(context.Background(), testcase.request)
+
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
+	}
+}
+
+var makeCreateEndpointTest = []struct {
+	name    string
+	client  ClientsService
+	request interface{}
+	want    *CreateResponse
+	err     error
+}{
+	{
+		name:    "should return the user",
+		client:  mockCorrectClientsService{},
+		request: &CreateRequest{},
+		want:    &CreateResponse{ErrUserExists()},
+	},
+	{
+		name:    "should return an error if the request has the wrong structure",
+		client:  mockCorrectClientsService{},
+		request: "jjj.www.ttt",
+		want:    &CreateResponse{},
+		err:     ErrInvalidRequestStructure(),
+	},
+	{
+		name:    "should return an error if the endpoint returns an error",
+		client:  mockErrorClientsService{},
+		request: &CreateRequest{},
+		want:    &CreateResponse{ErrInvalidCredentials()},
+	},
+}
+
+func TestMakeCreateEndpoint(t *testing.T) {
+	t.Log("MakeCreateEndpoint")
+
+	for _, testcase := range makeCreateEndpointTest {
+		t.Logf(testcase.name)
+
+		endpoint := MakeCreateEndpoint(testcase.client)
 		result, err := endpoint(context.Background(), testcase.request)
 
 		assert.DeepEqual(t, result, testcase.want)

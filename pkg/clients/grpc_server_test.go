@@ -286,18 +286,18 @@ func TestDecodeGRPCValidateRequest(t *testing.T) {
 var decodeGRPCCreateRequestTest = []struct {
 	name    string
 	request interface{}
-	want    CreateRequest
+	want    *CreateRequest
 	err     error
 }{
 	{
 		name:    "should return the new structure with the user and password",
 		request: &pb.CreateRequest{User: "John", Password: "pass"},
-		want:    CreateRequest{User: "John", Password: "pass"},
+		want:    &CreateRequest{User: "John", Password: "pass"},
 	},
 	{
 		name:    "should return an error if the request has the wrong structure",
 		request: "John, pass",
-		want:    CreateRequest{},
+		want:    &CreateRequest{},
 		err:     ErrInvalidRequestStructure(),
 	},
 }
@@ -387,7 +387,7 @@ var encodeGRPCCreateResponseTest = []struct {
 }{
 	{
 		name:    "should return the error",
-		request: CreateResponse{Err: fmt.Errorf("error!")},
+		request: &CreateResponse{Err: fmt.Errorf("error!")},
 		want:    &pb.CreateResponse{Error: "error!"},
 	},
 	{

@@ -84,7 +84,7 @@ func (c clientsService) Create(ctx context.Context, user, password string) error
 	if err == nil {
 		return ErrUserExists()
 	}
-	_, err = users.InsertOne(context.Background(), bson.M{user: password})
+	_, err = users.InsertOne(context.Background(), bson.M{"user": user, "password": password})
 	if err != nil {
 		return err
 	}

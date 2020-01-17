@@ -52,7 +52,7 @@ func NewHTTPHandler(endpoint Endpoints) http.Handler {
 }
 
 func decodeHTTPBookRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req = BookRequest{}
+	var req = &BookRequest{}
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		return req, err
@@ -67,23 +67,23 @@ func decodeHTTPCheckRequest(_ context.Context, r *http.Request) (interface{}, er
 	d := mux.Vars(r)["date"]
 	date, err := time.Parse("2006-01-02", d)
 
-	return CheckRequest{date}, err
+	return &CheckRequest{date}, err
 }
 
 func decodeHTTPAuthorizeRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req = AuthorizeRequest{}
+	var req = &AuthorizeRequest{}
 	err := json.NewDecoder(r.Body).Decode(&req)
 	return req, err
 }
 
 func decodeHTTPValidateRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req = ValidateRequest{}
+	var req = &ValidateRequest{}
 	err := json.NewDecoder(r.Body).Decode(&req)
 	return req, err
 }
 
 func decodeHTTPCreateRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req = CreateRequest{}
+	var req = &CreateRequest{}
 	err := json.NewDecoder(r.Body).Decode(&req)
 	return req, err
 }

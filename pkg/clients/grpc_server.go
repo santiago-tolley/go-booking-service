@@ -115,16 +115,16 @@ func encodeGRPCValidateResponse(_ context.Context, response interface{}) (interf
 func decodeGRPCCreateRequest(ctx context.Context, grpcReq interface{}) (interface{}, error) {
 	req, ok := grpcReq.(*pb.CreateRequest)
 	if !ok {
-		return CreateRequest{}, ErrInvalidRequestStructure()
+		return &CreateRequest{}, ErrInvalidRequestStructure()
 	}
-	return CreateRequest{
+	return &CreateRequest{
 		User:     req.User,
 		Password: req.Password,
 	}, nil
 }
 
 func encodeGRPCCreateResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp, ok := response.(CreateResponse)
+	resp, ok := response.(*CreateResponse)
 	if !ok {
 		return &pb.CreateResponse{}, ErrInvalidResponseStructure()
 	}

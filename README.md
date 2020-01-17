@@ -32,14 +32,12 @@ Note: install protoc-gen-go with `go get -u github.com/golang/protobuf/protoc-ge
 
 ### Create Go module
 ```
-go mod init go-service-example
+make init_mod
 ```
 
 ### Build
 ```
-go build cmd/clients/main.go
-go build cmd/rooms/main.go
-go build cmd/server/main.go
+make build
 ```
 
 ### Set up the database
@@ -61,9 +59,9 @@ db.createUser({user: "rooms-service", pwd: "rooms-service", roles: [{role: "read
 ## Running the Services
 Start the services with the following commands:
 ```
-go run cmd/server/main.go
-go run cmd/clients/main.go
-go run cmd/rooms/main.go
+make run_clients
+make run_rooms
+make run_server
 ```
 The Server service listens on port 8080 (HTTP)
 The Clients service listens on port 8082 (gRPC)

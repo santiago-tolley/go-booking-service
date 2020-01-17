@@ -10,6 +10,7 @@ import (
 
 	kitlog "github.com/go-kit/kit/log"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -73,6 +74,8 @@ var authorizeTest = []struct {
 	encoder  EncoderDecoder
 	want     string
 	err      error
+	init     func(*mongo.Database)
+	restore  func(*mongo.Database)
 }{
 	{
 		name:     "should return the token with the user",
@@ -80,6 +83,14 @@ var authorizeTest = []struct {
 		password: "pass",
 		encoder:  mockCorrectEncoderDecoder{},
 		want:     "jjj.www.ttt",
+		init: func(db *mongo.Database) {
+			users := db.Collection(commons.MongoClientCollection)
+			users.InsertOne(context.Background(), bson.M{"user": "John", "password": "pass"})
+		},
+		restore: func(db *mongo.Database) {
+			users := db.Collection(commons.MongoClientCollection)
+			users.Drop(context.Background())
+		},
 	},
 	{
 		name:     "should return an error if the user doesn't exist",
@@ -88,6 +99,8 @@ var authorizeTest = []struct {
 		encoder:  mockCorrectEncoderDecoder{},
 		want:     "",
 		err:      ErrInvalidCredentials(),
+		init:     func(db *mongo.Database) {},
+		restore:  func(db *mongo.Database) {},
 	},
 	{
 		name:     "should return an error if the password doesn't match",
@@ -96,6 +109,14 @@ var authorizeTest = []struct {
 		password: "not_pass",
 		want:     "",
 		err:      ErrInvalidCredentials(),
+		init: func(db *mongo.Database) {
+			users := db.Collection(commons.MongoClientCollection)
+			users.InsertOne(context.Background(), bson.M{"user": "John", "password": "pass"})
+		},
+		restore: func(db *mongo.Database) {
+			users := db.Collection(commons.MongoClientCollection)
+			users.Drop(context.Background())
+		},
 	},
 	{
 		name:     "should return an error if the encoder returns an error",
@@ -104,6 +125,14 @@ var authorizeTest = []struct {
 		password: "pass",
 		want:     "",
 		err:      jwt.ErrInvalidToken(),
+		init: func(db *mongo.Database) {
+			users := db.Collection(commons.MongoClientCollection)
+			users.InsertOne(context.Background(), bson.M{"user": "John", "password": "pass"})
+		},
+		restore: func(db *mongo.Database) {
+			users := db.Collection(commons.MongoClientCollection)
+			users.Drop(context.Background())
+		},
 	},
 }
 
@@ -112,7 +141,8 @@ func TestAuthorize(t *testing.T) {
 
 	for _, testcase := range authorizeTest {
 		t.Logf(testcase.name)
-
+		testcase.init(testDB)
+		defer testcase.restore(testDB)
 		c := clientsService{testcase.encoder, testDB}
 		result, err := c.Authorize(context.Background(), testcase.user, testcase.password)
 
@@ -127,12 +157,22 @@ var validateTest = []struct {
 	decoder EncoderDecoder
 	want    string
 	err     error
+	init    func(*mongo.Database)
+	restore func(*mongo.Database)
 }{
 	{
 		name:    "should return the user in the token",
 		token:   "jjj.www.ttt",
 		decoder: mockCorrectEncoderDecoder{},
 		want:    "John",
+		init: func(db *mongo.Database) {
+			users := db.Collection(commons.MongoClientCollection)
+			users.InsertOne(context.Background(), bson.M{"user": "John", "password": "pass"})
+		},
+		restore: func(db *mongo.Database) {
+			users := db.Collection(commons.MongoClientCollection)
+			users.Drop(context.Background())
+		},
 	},
 	{
 		name:    "should return an error if the user doesn't exist",
@@ -140,6 +180,8 @@ var validateTest = []struct {
 		decoder: mockCorrectNotFoundDecoder{},
 		want:    "",
 		err:     ErrUserNotFound(),
+		init:    func(db *mongo.Database) {},
+		restore: func(db *mongo.Database) {},
 	},
 	{
 		name:    "should return an error if the token is invalid",
@@ -147,6 +189,14 @@ var validateTest = []struct {
 		decoder: mockErrorEncoderDecoder{},
 		want:    "",
 		err:     jwt.ErrInvalidToken(),
+		init: func(db *mongo.Database) {
+			users := db.Collection(commons.MongoClientCollection)
+			users.InsertOne(context.Background(), bson.M{"user": "John", "password": "pass"})
+		},
+		restore: func(db *mongo.Database) {
+			users := db.Collection(commons.MongoClientCollection)
+			users.Drop(context.Background())
+		},
 	},
 }
 
@@ -155,7 +205,8 @@ func TestValidate(t *testing.T) {
 
 	for _, testcase := range validateTest {
 		t.Logf(testcase.name)
-
+		testcase.init(testDB)
+		defer testcase.restore(testDB)
 		c := clientsService{testcase.decoder, testDB}
 		result, err := c.Validate(context.Background(), testcase.token)
 
@@ -169,17 +220,32 @@ var createTest = []struct {
 	user     string
 	password string
 	err      error
+	init     func(*mongo.Database)
+	restore  func(*mongo.Database)
 }{
 	{
-		name:     "should return the error",
+		name:     "should return nil error",
 		user:     "Charles",
 		password: "pass2",
+		init:     func(db *mongo.Database) {},
+		restore: func(db *mongo.Database) {
+			users := db.Collection(commons.MongoClientCollection)
+			users.Drop(context.Background())
+		},
 	},
 	{
 		name:     "should return an error if the user already exists",
 		user:     "John",
 		password: "pass",
 		err:      ErrUserExists(),
+		init: func(db *mongo.Database) {
+			users := db.Collection(commons.MongoClientCollection)
+			users.InsertOne(context.Background(), bson.M{"user": "John", "password": "pass"})
+		},
+		restore: func(db *mongo.Database) {
+			users := db.Collection(commons.MongoClientCollection)
+			users.Drop(context.Background())
+		},
 	},
 }
 
@@ -188,7 +254,8 @@ func TestCreate(t *testing.T) {
 
 	for _, testcase := range createTest {
 		t.Logf(testcase.name)
-
+		testcase.init(testDB)
+		defer testcase.restore(testDB)
 		c := clientsService{mockCorrectEncoderDecoder{}, testDB}
 		err := c.Create(context.Background(), testcase.user, testcase.password)
 

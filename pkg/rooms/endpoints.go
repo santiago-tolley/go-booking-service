@@ -13,7 +13,7 @@ type Endpoints struct {
 }
 
 func (e Endpoints) Book(ctx context.Context, token string, date time.Time) (int, error) {
-	resp, err := e.BookEndpoint(ctx, BookRequest{Token: token, Date: date})
+	resp, err := e.BookEndpoint(ctx, &BookRequest{Token: token, Date: date})
 	if err != nil {
 		return 0, err
 	}
@@ -26,7 +26,7 @@ func (e Endpoints) Book(ctx context.Context, token string, date time.Time) (int,
 }
 
 func (e Endpoints) Check(ctx context.Context, date time.Time) (int, error) {
-	resp, err := e.CheckEndpoint(ctx, CheckRequest{Date: date})
+	resp, err := e.CheckEndpoint(ctx, &CheckRequest{Date: date})
 	if err != nil {
 		return 0, err
 	}
