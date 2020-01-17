@@ -10,6 +10,8 @@ const (
 	JWTSecret     = "very_secret"
 	JWTExpiration = 10 * time.Minute
 
+	RoomsNumber = 5
+
 	MongoURL              = "mongodb://clients-service:clients-service@localhost:27017/clients-service"
 	MongoClientDB         = "clients-service"
 	MongoClientCollection = "users"

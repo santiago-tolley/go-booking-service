@@ -2,6 +2,7 @@
 This Booking Service allows the following:
 - Authorize a user using "user" and "password". Returns a signed JWT.
 - Validate a JWT. For internal validation.
+- Create a user with a password.
 - Book a room for a desired date. Requires a valid JWT. Returns the booked room id.
 - Check the number of available rooms for a desired date. Returns the number of rooms available.
 
@@ -63,10 +64,21 @@ make run_clients
 make run_rooms
 make run_server
 ```
-The Server service listens on port 8080 (HTTP)
-The Clients service listens on port 8082 (gRPC)
-The Rooms service listens on port 8081 (gRPC)
+The default ports for the services are the following:
+- Server service: 8080 (HTTP)
+- Clients service: 8082 (gRPC)
+- Rooms service: 8081 (gRPC)
 
+## Running Tests
+To run tests use the following commands:
+```
+make test
+```
+
+For the verbose output use: 
+```
+make test-v
+```
 
 ## Calling the Proxy
 The endpoints can be called using the following cURL commands:
@@ -86,6 +98,16 @@ curl --location --request POST 'localhost:8080/validate/' \
 --header 'Content-Type: application/json' \
 --data-raw '{
 	"token": "jjj.www.ttt"
+}'
+```
+
+### Create: 
+```
+curl --location --request POST 'localhost:8080/create/' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+	"user": "John",
+	"password": "pass"
 }'
 ```
 

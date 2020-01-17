@@ -133,7 +133,7 @@ func (m mockErrorClientsService) Check(ctx context.Context, date time.Time) (int
 
 var makeBookEndpointTest = []struct {
 	name    string
-	client  RoomsService
+	client  Service
 	request interface{}
 	want    *BookResponse
 	err     error
@@ -175,7 +175,7 @@ func TestMakeBookEndpoint(t *testing.T) {
 
 var makeCheckEndpointTest = []struct {
 	name    string
-	client  RoomsService
+	client  Service
 	request interface{}
 	want    *CheckResponse
 	err     error

@@ -195,7 +195,7 @@ func (m mockErrorClientsService) Create(ctx context.Context, user, password stri
 
 var makeAuthorizeEndpointTest = []struct {
 	name    string
-	client  ClientsService
+	client  Service
 	request interface{}
 	want    *AuthorizeResponse
 	err     error
@@ -237,7 +237,7 @@ func TestMakeAuthorizeEndpoint(t *testing.T) {
 
 var makeValidateEndpointTest = []struct {
 	name    string
-	client  ClientsService
+	client  Service
 	request interface{}
 	want    *ValidateResponse
 	err     error
@@ -279,7 +279,7 @@ func TestMakeValidateEndpoint(t *testing.T) {
 
 var makeCreateEndpointTest = []struct {
 	name    string
-	client  ClientsService
+	client  Service
 	request interface{}
 	want    *CreateResponse
 	err     error

@@ -5,9 +5,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
-	"time"
 
 	"go-booking-service/commons"
 	"go-booking-service/pb"
@@ -32,23 +30,10 @@ func main() {
 		errLogger.Log("transport", "gRPC", "message", "could not connect to clients service", "error", err)
 	}
 
-	roomsCollection := []rooms.Room{
-		{
-			map[time.Time]string{},
-			&sync.Mutex{},
-		},
-		{
-			map[time.Time]string{},
-			&sync.Mutex{},
-		},
-		{
-			map[time.Time]string{},
-			&sync.Mutex{},
-		},
-	}
+	roomsCollection := rooms.GenerateRooms(commons.RoomsNumber)
 
 	var (
-		service    = rooms.NewRoomsServer(roomsCollection, clients.NewGRPCClient(clientGRPCconn))
+		service    = rooms.NewRoomsServer(rooms.WithRooms(&roomsCollection), rooms.WithValidator(clients.NewGRPCClient(clientGRPCconn)))
 		endpoints  = rooms.MakeEndpoints(service)
 		grpcServer = rooms.NewGRPCServer(endpoints)
 	)

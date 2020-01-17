@@ -38,14 +38,14 @@ func (e Endpoints) Check(ctx context.Context, date time.Time) (int, error) {
 	return response.Available, response.Err
 }
 
-func MakeEndpoints(p RoomsService) Endpoints {
+func MakeEndpoints(p Service) Endpoints {
 	return Endpoints{
 		BookEndpoint:  MakeBookEndpoint(p),
 		CheckEndpoint: MakeCheckEndpoint(p),
 	}
 }
 
-func MakeBookEndpoint(p RoomsService) endpoint.Endpoint {
+func MakeBookEndpoint(p Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req, ok := request.(*BookRequest)
 		if !ok {
@@ -57,7 +57,7 @@ func MakeBookEndpoint(p RoomsService) endpoint.Endpoint {
 	}
 }
 
-func MakeCheckEndpoint(p RoomsService) endpoint.Endpoint {
+func MakeCheckEndpoint(p Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req, ok := request.(*CheckRequest)
 		if !ok {

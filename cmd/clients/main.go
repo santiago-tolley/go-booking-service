@@ -1,13 +1,11 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"go-booking-service/commons"
 	"go-booking-service/pb"
@@ -17,8 +15,6 @@ import (
 	kitlog "github.com/go-kit/kit/log"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	"github.com/oklog/oklog/pkg/group"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
 )
 
@@ -28,20 +24,9 @@ func main() {
 	logger := kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stdout))
 	errLogger := kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stderr))
 
-	dbClient, err := mongo.NewClient(options.Client().ApplyURI(commons.MongoURL))
-	if err != nil {
-		errLogger.Log("message", "could not set up mongo client", "error", err)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	defer cancel()
-	err = dbClient.Connect(ctx)
-	if err != nil {
-		errLogger.Log("message", "could not connect to database", "error", err)
-	}
-
 	var (
-		service    = clients.NewClientsServer(token.JWTEncoder{}, dbClient.Database(commons.MongoClientDB))
+		service = clients.NewClientsServer(clients.WithEncoder(token.JWTEncoder{}),
+			clients.WithMongoDB(commons.MongoURL, commons.MongoClientDB))
 		endpoints  = clients.MakeEndpoints(service)
 		grpcServer = clients.NewGRPCServer(endpoints)
 	)

@@ -73,7 +73,7 @@ func TestServiceBook(t *testing.T) {
 	for _, testcase := range serviceBookTest {
 		t.Logf(testcase.name)
 
-		rs := roomsService{testcase.rooms, testcase.validator}
+		rs := &RoomsService{&testcase.rooms, testcase.validator}
 		result, err := rs.Book(context.Background(), testcase.token, testcase.date)
 
 		assert.Equal(t, result, testcase.want)
@@ -134,7 +134,7 @@ func TestServiceCheck(t *testing.T) {
 	for _, testcase := range serviceCheckTest {
 		t.Logf(testcase.name)
 
-		rs := roomsService{testcase.rooms, testcase.validator}
+		rs := &RoomsService{&testcase.rooms, testcase.validator}
 		result, err := rs.Check(context.Background(), testcase.date)
 
 		assert.Equal(t, result, testcase.want)

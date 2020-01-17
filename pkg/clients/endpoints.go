@@ -51,7 +51,7 @@ func (e Endpoints) Create(ctx context.Context, user, password string) error {
 	return response.Err
 }
 
-func MakeEndpoints(c ClientsService) Endpoints {
+func MakeEndpoints(c Service) Endpoints {
 	return Endpoints{
 		AuthorizeEndpoint: MakeAuthorizeEndpoint(c),
 		ValidateEndpoint:  MakeValidateEndpoint(c),
@@ -59,7 +59,7 @@ func MakeEndpoints(c ClientsService) Endpoints {
 	}
 }
 
-func MakeAuthorizeEndpoint(c ClientsService) endpoint.Endpoint {
+func MakeAuthorizeEndpoint(c Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req, ok := request.(*AuthorizeRequest)
 		if !ok {
@@ -71,7 +71,7 @@ func MakeAuthorizeEndpoint(c ClientsService) endpoint.Endpoint {
 	}
 }
 
-func MakeValidateEndpoint(c ClientsService) endpoint.Endpoint {
+func MakeValidateEndpoint(c Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req, ok := request.(*ValidateRequest)
 		if !ok {
@@ -83,7 +83,7 @@ func MakeValidateEndpoint(c ClientsService) endpoint.Endpoint {
 	}
 }
 
-func MakeCreateEndpoint(c ClientsService) endpoint.Endpoint {
+func MakeCreateEndpoint(c Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req, ok := request.(*CreateRequest)
 		if !ok {

@@ -143,7 +143,7 @@ func TestAuthorize(t *testing.T) {
 		t.Logf(testcase.name)
 		testcase.init(testDB)
 		defer testcase.restore(testDB)
-		c := clientsService{testcase.encoder, testDB}
+		c := &ClientsService{testcase.encoder, testDB}
 		result, err := c.Authorize(context.Background(), testcase.user, testcase.password)
 
 		assert.Equal(t, result, testcase.want)
@@ -207,7 +207,7 @@ func TestValidate(t *testing.T) {
 		t.Logf(testcase.name)
 		testcase.init(testDB)
 		defer testcase.restore(testDB)
-		c := clientsService{testcase.decoder, testDB}
+		c := &ClientsService{testcase.decoder, testDB}
 		result, err := c.Validate(context.Background(), testcase.token)
 
 		assert.Equal(t, result, testcase.want)
@@ -256,7 +256,7 @@ func TestCreate(t *testing.T) {
 		t.Logf(testcase.name)
 		testcase.init(testDB)
 		defer testcase.restore(testDB)
-		c := clientsService{mockCorrectEncoderDecoder{}, testDB}
+		c := &ClientsService{mockCorrectEncoderDecoder{}, testDB}
 		err := c.Create(context.Background(), testcase.user, testcase.password)
 
 		assert.DeepEqual(t, err, testcase.err)

@@ -3,19 +3,25 @@ package clients
 import (
 	"context"
 	"go-booking-service/commons"
+	"os"
 	"time"
+
+	kitlog "github.com/go-kit/kit/log"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type ClientsService interface {
+var errLogger = kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stderr))
+
+type Service interface {
 	Authorize(context.Context, string, string) (string, error)
 	Validate(context.Context, string) (string, error)
 	Create(context.Context, string, string) error
 }
 
-type clientsService struct {
+type ClientsService struct {
 	encoder EncoderDecoder
 	db      *mongo.Database
 }
@@ -25,11 +31,40 @@ type EncoderDecoder interface {
 	Decode(string, string) (string, error)
 }
 
-func NewClientsServer(e EncoderDecoder, db *mongo.Database) ClientsService {
-	return clientsService{e, db}
+type ServiceOption func(*ClientsService)
+
+func WithEncoder(e EncoderDecoder) ServiceOption {
+	return func(c *ClientsService) {
+		c.encoder = e
+	}
 }
 
-func (c clientsService) Authorize(ctx context.Context, user, password string) (string, error) {
+func WithMongoDB(url, database string) ServiceOption {
+	return func(c *ClientsService) {
+		db, err := mongo.NewClient(options.Client().ApplyURI(url))
+		if err != nil {
+			errLogger.Log("message", "could not set up mongo client", "error", err)
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		defer cancel()
+		err = db.Connect(ctx)
+		if err != nil {
+			errLogger.Log("message", "could not connect to database", "error", err)
+		}
+		c.db = db.Database(database)
+	}
+}
+
+func NewClientsServer(opts ...ServiceOption) *ClientsService {
+	c := &ClientsService{}
+	for _, options := range opts {
+		options(c)
+	}
+	return c
+}
+
+func (c *ClientsService) Authorize(ctx context.Context, user, password string) (string, error) {
 	users := c.db.Collection(commons.MongoClientCollection)
 	result := struct {
 		User     string
@@ -52,7 +87,7 @@ func (c clientsService) Authorize(ctx context.Context, user, password string) (s
 	return token, nil
 }
 
-func (c clientsService) Validate(ctx context.Context, token string) (string, error) {
+func (c *ClientsService) Validate(ctx context.Context, token string) (string, error) {
 	user, err := c.encoder.Decode(token, commons.JWTSecret)
 	if err != nil {
 		return "", err
@@ -72,7 +107,7 @@ func (c clientsService) Validate(ctx context.Context, token string) (string, err
 	return user, err
 }
 
-func (c clientsService) Create(ctx context.Context, user, password string) error {
+func (c *ClientsService) Create(ctx context.Context, user, password string) error {
 
 	users := c.db.Collection(commons.MongoClientCollection)
 	result := struct {
