@@ -10,16 +10,10 @@ build:
 	go build cmd/server/main.go
 
 init_db:
-	# mongo
-	# use clients-service
-	# db.createUser({user: "clients-service", pwd: "clients-service", roles: [{role: "readWrite", db: "clients-service"}]})
-	# use rooms-service
-	# db.createUser({user: "rooms-service", pwd: "rooms-service", roles: [{role: "readWrite", db: "rooms-service"}]})
-	mongo clients-service < init-mongo.js
+	mongo init-mongo.js
 
-init_db_docker:
-	docker exec booking_db mongo clients-service < init-mongo.js
-	# dbinit
+docker_init_db:
+	docker exec booking_db mongo init-mongo.js
 
 test:
 	go test -cover ./pkg/clients/
@@ -41,3 +35,29 @@ run_rooms:
 
 run_server:
 	go run ./cmd/server/main.go
+
+docker-start:
+	docker-compose up
+
+docker_test:
+	docker exec booking_client go test -cover ./pkg/clients/
+	docker exec booking_room go test -cover ./pkg/rooms/
+	docker exec booking_server go test -cover ./pkg/server/
+	docker exec booking_server go test -cover ./pkg/token/
+	
+docker-test-v:
+	docker exec booking_client go test -v -cover ./pkg/clients/
+	docker exec booking_room go test -v -cover ./pkg/rooms/
+	docker exec booking_server go test -v -cover ./pkg/server/
+	docker exec booking_server go test -v -cover ./pkg/token/
+
+docker-build:
+	docker build --build-arg service=clients -t clients_service:v1 .
+	docker build --build-arg service=rooms -t rooms_service:v1 .
+	docker build --build-arg service=server -t server_service:v1 .
+
+docker-db-build:
+	docker build -f mongo.Dockerfile -t mongo-image:v1 .
+
+docker-server-ip:
+	docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' booking_server

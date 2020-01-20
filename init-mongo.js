@@ -11,11 +11,13 @@ db.createUser(
         ]
     }
 )
+db.users.createIndex({"user": 1}, {unique: true});
+
 db = db.getSiblingDB('test-clients-service')
 db.createUser(
     {
-        user: "clients-service",
-        pwd: "clients-service",
+        user: "test-clients-service",
+        pwd: "test-clients-service",
         roles: [
             {
                 role: "readWrite",
@@ -24,6 +26,8 @@ db.createUser(
         ]
     }
 )
+db.users.createIndex({"user": 1}, {unique: true});
+
 db = db.getSiblingDB('rooms-service')
 db.createUser(
     {
@@ -37,3 +41,19 @@ db.createUser(
         ]
     }
 )
+db.users.createIndex({"room_id": 1, "date": 1}, {unique: true});
+
+db = db.getSiblingDB('test-rooms-service')
+db.createUser(
+    {
+        user: "test-rooms-service",
+        pwd: "test-rooms-service",
+        roles: [
+            {
+                role: "readWrite",
+                db: "test-rooms-service"
+            }
+        ]
+    }
+)
+db.users.createIndex({"room_id": 1, "date": 1}, {unique: true});

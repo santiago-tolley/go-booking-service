@@ -42,18 +42,43 @@ make build
 ```
 
 ### Set up the database
-Create the client user:
+#### Set up in installed mongodb
+Run the script `init-mongo.js`:
+```
+make init_db
+```
+
+#### Set up in docker:
+Build the image, start the container and run the script:
+```
+make docker-db-build
+docker-compose up -d
+make docker_init_db
+```
+
+#### Set up manually:
+Create the client user (and client test user):
 ```
 mongo
 use clients-service
 db.createUser({user: "clients-service", pwd: "clients-service", roles: [{role: "readWrite", db: "clients-service"}]})
+db.users.createIndex({"user": 1}, {unique: true})
+
+use test-clients-service
+db.createUser({user: "test-clients-service", pwd: "test-clients-service", roles: [{role: "readWrite", db: "test-clients-service"}]})
+db.users.createIndex({"user": 1}, {unique: true})
 ```
 
-Create the room user:
+Create the room user (and room test user):
 ```
 mongo
 use rooms-service
 db.createUser({user: "rooms-service", pwd: "rooms-service", roles: [{role: "readWrite", db: "rooms-service"}]})
+db.rooms.createIndex({"room_id": 1}, {unique: true})
+
+use test-rooms-service
+db.createUser({user: "test-rooms-service", pwd: "test-rooms-service", roles: [{role: "readWrite", db: "test-rooms-service"}]})
+db.rooms.createIndex({"room_id": 1}, {unique: true})
 ```
 
 
