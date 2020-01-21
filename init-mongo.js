@@ -11,7 +11,12 @@ db.createUser(
         ]
     }
 )
-db.users.createIndex({"user": 1}, {unique: true});
+var collection = db.collection('user');
+collection.createIndex(
+    { user : 1 }, {unique : true}, function(err, result) {
+    console.log(result);
+    callback(result);
+});
 
 db = db.getSiblingDB('test-clients-service')
 db.createUser(
@@ -26,7 +31,12 @@ db.createUser(
         ]
     }
 )
-db.users.createIndex({"user": 1}, {unique: true});
+var collection = db.collection('user');
+collection.createIndex(
+    { user : 1 }, {unique : true}, function(err, result) {
+    console.log(result);
+    callback(result);
+});
 
 db = db.getSiblingDB('rooms-service')
 db.createUser(
@@ -41,7 +51,12 @@ db.createUser(
         ]
     }
 )
-db.users.createIndex({"room_id": 1, "date": 1}, {unique: true});
+var collection = db.collection('rooms');
+collection.createIndex(
+    { room_id : 1, date: 1}, {unique : true}, function(err, result) {
+    console.log(result);
+    callback(result);
+});
 
 db = db.getSiblingDB('test-rooms-service')
 db.createUser(
@@ -56,4 +71,9 @@ db.createUser(
         ]
     }
 )
-db.users.createIndex({"room_id": 1, "date": 1}, {unique: true});
+var collection = db.collection('rooms');
+collection.createIndex(
+    { room_id : 1, date: 1}, {unique : true}, function(err, result) {
+    console.log(result);
+    callback(result);
+});
