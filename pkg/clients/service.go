@@ -110,20 +110,11 @@ func (c *ClientsService) Validate(ctx context.Context, token string) (string, er
 func (c *ClientsService) Create(ctx context.Context, user, password string) error {
 
 	users := c.db.Collection(commons.MongoClientCollection)
-	result := struct {
-		User     string
-		Password string
-	}{}
-	filter := bson.D{{"user", user}}
-	err := users.FindOne(context.Background(), filter).Decode(&result)
-	if err == nil {
+
+	_, err := users.InsertOne(context.Background(), bson.M{"user": user, "password": password})
+	if err != nil {
 		return ErrUserExists()
 	}
-	_, err = users.InsertOne(context.Background(), bson.M{"user": user, "password": password})
-	if err != nil {
-		return err
-	}
-	// id := res.InsertedID
 
 	return nil
 }

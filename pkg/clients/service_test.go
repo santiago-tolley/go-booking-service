@@ -13,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/x/bsonx"
 
 	"gotest.tools/assert"
 )
@@ -22,7 +23,7 @@ var testDB *mongo.Database
 func init() {
 	errLogger := kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stderr))
 
-	testClient, err := mongo.NewClient(options.Client().ApplyURI(commons.MongoURL))
+	testClient, err := mongo.NewClient(options.Client().ApplyURI(commons.MongoClientURL))
 	if err != nil {
 		errLogger.Log("message", "could not set up mongo client", "error", err)
 	}
@@ -227,7 +228,16 @@ var createTest = []struct {
 		name:     "should return nil error",
 		user:     "Charles",
 		password: "pass2",
-		init:     func(db *mongo.Database) {},
+		init: func(db *mongo.Database) {
+			users := db.Collection(commons.MongoClientCollection)
+			_, _ = users.Indexes().CreateOne(
+				context.Background(),
+				mongo.IndexModel{
+					Keys:    bsonx.Doc{{"user", bsonx.Int32(1)}},
+					Options: options.Index().SetUnique(true),
+				},
+			)
+		},
 		restore: func(db *mongo.Database) {
 			users := db.Collection(commons.MongoClientCollection)
 			users.Drop(context.Background())
@@ -241,6 +251,14 @@ var createTest = []struct {
 		init: func(db *mongo.Database) {
 			users := db.Collection(commons.MongoClientCollection)
 			users.InsertOne(context.Background(), bson.M{"user": "John", "password": "pass"})
+			_, _ = users.Indexes().CreateOne(
+				context.Background(),
+				mongo.IndexModel{
+					Keys:    bsonx.Doc{{"user", bsonx.Int32(1)}},
+					Options: options.Index().SetUnique(true),
+				},
+			)
+
 		},
 		restore: func(db *mongo.Database) {
 			users := db.Collection(commons.MongoClientCollection)

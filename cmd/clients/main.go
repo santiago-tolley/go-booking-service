@@ -26,7 +26,7 @@ func main() {
 
 	var (
 		service = clients.NewClientsServer(clients.WithEncoder(token.JWTEncoder{}),
-			clients.WithMongoDB(commons.MongoURL, commons.MongoClientDB))
+			clients.WithMongoDB(commons.MongoClientURL, commons.MongoClientDB))
 		endpoints  = clients.MakeEndpoints(service)
 		grpcServer = clients.NewGRPCServer(endpoints)
 	)
