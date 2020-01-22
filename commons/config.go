@@ -3,16 +3,12 @@ package commons
 import (
 	"os"
 	"time"
-
-	kitlog "github.com/go-kit/kit/log"
 )
 
 var (
-	logger = kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stdout))
-
-	ServerHttpAddress = getEnv("SERVER_ADDRESS", "0.0.0.0:8080")
-	RoomsGrpcAddr     = getEnv("ROOMS_ADDRESS", "0.0.0.0:8081")
-	ClientsGrpcAddr   = getEnv("CLIENTS_ADDRESS", "0.0.0.0:8082")
+	ServerHttpAddress = getEnv("SERVER_ADDRESS", ":8080")
+	RoomsGrpcAddr     = getEnv("ROOMS_ADDRESS", ":8081")
+	ClientsGrpcAddr   = getEnv("CLIENTS_ADDRESS", ":8082")
 
 	JWTSecret     = getEnv("JWT_SECRET", "very_secret")
 	JWTExpiration = 10 * time.Minute

@@ -38,9 +38,9 @@ test-v:			# Runs service tests with verbose output
 	go test -v -cover ./pkg/token/
 
 docker-build:		## Builds the service docker images
-	docker build -f clients.Dockerfile --network=gobookingservice_book -t clients_service:v1 . 
-	docker build -f rooms.Dockerfile --network=gobookingservice_book -t rooms_service:v1 .
-	docker build -f server.Dockerfile --network=gobookingservice_book -t server_service:v1 .
+	docker build -f clients.Dockerfile -t clients-service:v1 . 
+	docker build -f rooms.Dockerfile -t rooms-service:v1 .
+	docker build -f server.Dockerfile -t server-service:v1 .
 
 docker-build-db:	## Builds mongo database image
 	docker build -f mongo.Dockerfile -t mongo-image:v1 .
