@@ -155,3 +155,31 @@ For a list of commands in the makefile run:
 ```
 make help
 ```
+
+## Database Structures
+### Clients Database
+The clients database stores users and passwords in a simple format:
+```
+{
+	user 
+	password 
+}
+```
+It contains a unique index on `user` 
+
+### Rooms Database
+The rooms database stores rooms and their booked status in the following structure:
+```
+{
+	type 			// type of document (room)
+	room_id 
+	bookings 		// list of pairs (date, client)
+}
+```
+It also contains a meta document with the number of total rooms:  
+```
+{
+	type 			// type of document (meta)
+	total_rooms 	// number of rooms
+}
+```

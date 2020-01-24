@@ -11,7 +11,7 @@ var (
 	ClientsGrpcAddr   = getEnv("CLIENTS_ADDRESS", ":8082")
 
 	JWTSecret     = getEnv("JWT_SECRET", "very_secret")
-	JWTExpiration = 10 * time.Minute
+	JWTExpiration = 2 * time.Hour
 
 	RoomsNumber = 5
 

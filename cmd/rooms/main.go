@@ -30,10 +30,11 @@ func main() {
 		errLogger.Log("transport", "gRPC", "message", "could not connect to clients service", "error", err)
 	}
 
-	roomsCollection := rooms.GenerateRooms(commons.RoomsNumber)
+	// roomsCollection := rooms.GenerateRooms(commons.RoomsNumber)
 
 	var (
-		service    = rooms.NewRoomsServer(rooms.WithRooms(&roomsCollection), rooms.WithValidator(clients.NewGRPCClient(clientGRPCconn)))
+		service = rooms.NewRoomsServer(rooms.WithMongoDB(commons.MongoRoomURL, commons.MongoRoomDB), //rooms.WithRooms(&roomsCollection),
+			rooms.WithLoadedRooms(), rooms.WithValidator(clients.NewGRPCClient(clientGRPCconn)))
 		endpoints  = rooms.MakeEndpoints(service)
 		grpcServer = rooms.NewGRPCServer(endpoints)
 	)
