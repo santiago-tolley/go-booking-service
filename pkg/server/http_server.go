@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"go-booking-service/pkg/clients"
@@ -52,21 +53,13 @@ func NewHTTPHandler(endpoint Endpoints) http.Handler {
 }
 
 func decodeHTTPBookRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req = &BookRequest{}
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		return req, err
-	}
-	d := mux.Vars(r)["date"]
-	date, err := time.Parse("2006-01-02", d)
-	req.Date = date
-	return req, err
+	token := getToken(r)
+	date, err := getDate(r)
+	return &BookRequest{Token: token, Date: date}, err
 }
 
 func decodeHTTPCheckRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	d := mux.Vars(r)["date"]
-	date, err := time.Parse("2006-01-02", d)
-
+	date, err := getDate(r)
 	return &CheckRequest{date}, err
 }
 
@@ -77,9 +70,8 @@ func decodeHTTPAuthorizeRequest(_ context.Context, r *http.Request) (interface{}
 }
 
 func decodeHTTPValidateRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req = &ValidateRequest{}
-	err := json.NewDecoder(r.Body).Decode(&req)
-	return req, err
+	token := getToken(r)
+	return &ValidateRequest{Token: token}, nil
 }
 
 func decodeHTTPCreateRequest(_ context.Context, r *http.Request) (interface{}, error) {
@@ -124,4 +116,21 @@ func err2code(err error) int {
 
 type errorWrapper struct {
 	Error string `json:"error"`
+}
+
+// Returns token from header or "" if invalid
+func getToken(r *http.Request) string {
+	var header = r.Header.Get("Authorization")
+	auth_header := strings.Split(header, " ")
+	var token string
+	if len(auth_header) == 2 {
+		token = auth_header[1]
+	}
+	return token
+}
+
+// Returns date from query params or an error if invalid
+func getDate(r *http.Request) (time.Time, error) {
+	date := mux.Vars(r)["date"]
+	return time.Parse("2006-01-02", date)
 }
