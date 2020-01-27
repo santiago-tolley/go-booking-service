@@ -73,6 +73,7 @@ func (c *ClientsService) Authorize(ctx context.Context, user, password string) (
 	filter := bson.D{{"user", user}}
 	err := users.FindOne(context.Background(), filter).Decode(&result)
 	if err != nil {
+		errLogger.Log("message", "error retrieving user", "error", err)
 		return "", ErrInvalidCredentials()
 	}
 
@@ -101,6 +102,7 @@ func (c *ClientsService) Validate(ctx context.Context, token string) (string, er
 	filter := bson.D{{"user", user}}
 	err = users.FindOne(context.Background(), filter).Decode(&result)
 	if err != nil {
+		errLogger.Log("message", "error retrieving user", "error", err)
 		return "", ErrUserNotFound()
 	}
 
@@ -113,6 +115,7 @@ func (c *ClientsService) Create(ctx context.Context, user, password string) erro
 
 	_, err := users.InsertOne(context.Background(), bson.M{"user": user, "password": password})
 	if err != nil {
+		errLogger.Log("message", "error inserting in database", "error", err)
 		return ErrUserExists()
 	}
 

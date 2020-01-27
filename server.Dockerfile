@@ -1,7 +1,5 @@
 from golang:latest
 
-ARG service
-
 WORKDIR /app
 
 COPY . .
