@@ -4,9 +4,12 @@ import (
 	"context"
 	"errors"
 
+	"github.com/go-kit/kit/log/level"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
 
+	"go-booking-service/commons"
 	"go-booking-service/pb"
 )
 
@@ -45,14 +48,24 @@ func NewGRPCClient(conn *grpc.ClientConn) Endpoints {
 	}
 }
 
-func encodeGRPCAuthorizeRequest(_ context.Context, request interface{}) (interface{}, error) {
+func encodeGRPCAuthorizeRequest(ctx context.Context, request interface{}) (interface{}, error) {
 	req, ok := request.(*AuthorizeRequest)
 	if !ok {
 		return &pb.AuthorizeRequest{}, ErrInvalidRequestStructure()
 	}
+
+	var correlationId uuid.UUID
+	correlationId, ok = ctx.Value(commons.ContextKeyCorrelationID).(uuid.UUID)
+	if !ok {
+		level.Error(logger).Log("message", "encoding: no correlation id in context")
+		return &pb.BookRequest{}, ErrNoCorrelationId()
+	}
+	level.Info(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "in encode grpcClient")
+
 	return &pb.AuthorizeRequest{
-		User:     req.User,
-		Password: req.Password,
+		User:          req.User,
+		Password:      req.Password,
+		CorrelationId: correlationId.String(),
 	}, nil
 }
 

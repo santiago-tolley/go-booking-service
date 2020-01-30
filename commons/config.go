@@ -3,6 +3,8 @@ package commons
 import (
 	"os"
 	"time"
+
+	"github.com/go-kit/kit/log/level"
 )
 
 var (
@@ -24,6 +26,8 @@ var (
 	MongoRoomDB         = getEnv("MONGO_ROOM_DB", "rooms-service")
 	MongoRoomCollection = getEnv("MONGO_ROOM_COLLECTION", "rooms")
 	MongoRoomDBTest     = getEnv("MONGO_ROOM_DB_TEST", "test-rooms-service")
+
+	LoggingLevel = level.AllowDebug() // Error > Warn > Info > Debug
 )
 
 func getEnv(name, def string) string {
@@ -33,3 +37,13 @@ func getEnv(name, def string) string {
 	}
 	return r
 }
+
+type contextKey string
+
+func (c contextKey) String() string {
+	return "server context key " + string(c)
+}
+
+var (
+	ContextKeyCorrelationID = contextKey("uuid")
+)

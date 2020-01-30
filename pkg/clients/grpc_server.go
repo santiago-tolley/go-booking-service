@@ -2,8 +2,10 @@ package clients
 
 import (
 	"context"
+	"go-booking-service/commons"
 	"go-booking-service/pb"
 
+	"github.com/go-kit/kit/log/level"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 )
 
@@ -74,9 +76,12 @@ func decodeGRPCAuthorizeRequest(ctx context.Context, grpcReq interface{}) (inter
 	if !ok {
 		return &AuthorizeRequest{}, ErrInvalidRequestStructure()
 	}
+	level.Info(logger).Log("correlation ID", req.CorrelationId, "message", "in decode req grpcserver")
+	ctx = context.WithValue(ctx, commons.ContextKeyCorrelationID, req.CorrelationId)
 	return &AuthorizeRequest{
-		User:     req.User,
-		Password: req.Password,
+		User:          req.User,
+		Password:      req.Password,
+		CorrelationID: req.CorrelationId,
 	}, nil
 }
 

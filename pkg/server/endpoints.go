@@ -2,9 +2,11 @@ package server
 
 import (
 	"context"
+	"go-booking-service/commons"
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/log/level"
 )
 
 type Endpoints struct {
@@ -40,6 +42,7 @@ func (e Endpoints) Check(ctx context.Context, date time.Time) (int, error) {
 }
 
 func (e Endpoints) Authorize(ctx context.Context, user, password string) (string, error) {
+	level.Info(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "in authorize endpoint")
 	resp, err := e.AuthorizeEndpoint(ctx, &AuthorizeRequest{User: user, Password: password})
 	if err != nil {
 		return "", err
@@ -87,6 +90,7 @@ func MakeEndpoints(p ServerService) Endpoints {
 
 func MakeAuthorizeEndpoint(p ServerService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		level.Info(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "in make endpoint result")
 		req, ok := request.(*AuthorizeRequest)
 		if !ok {
 			return &AuthorizeResponse{}, ErrInvalidRequestStructure()

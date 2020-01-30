@@ -4,6 +4,7 @@ const (
 	InvalidRequestStructure  = "Invalid request structure"
 	InvalidResponseStructure = "Invalid response structure"
 	NoRoomAvailable          = "No room available"
+	NoCorrelationId          = "No correlation Id in context"
 )
 
 type ErrorWithMsg struct {
@@ -24,4 +25,8 @@ func ErrInvalidResponseStructure() error {
 
 func ErrNoRoomAvailable() error {
 	return ErrorWithMsg{NoRoomAvailable}
+}
+
+func ErrNoCorrelationId() error {
+	return ErrorWithMsg{NoCorrelationId}
 }

@@ -2,8 +2,10 @@ package rooms
 
 import (
 	"context"
+	"go-booking-service/commons"
 	"go-booking-service/pb"
 
+	"github.com/go-kit/kit/log/level"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"google.golang.org/grpc"
 )
@@ -33,29 +35,44 @@ func NewGRPCClient(conn *grpc.ClientConn) Endpoints {
 	}
 }
 
-func encodeGRPCBookRequest(_ context.Context, request interface{}) (interface{}, error) {
+func encodeGRPCBookRequest(ctx context.Context, request interface{}) (interface{}, error) {
 	req, ok := request.(*BookRequest)
+	level.Info(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "Book attempt")
 	if !ok {
+		level.Error(logger).Log("message", "encoding: invalid book request structure")
 		return &pb.BookRequest{}, ErrInvalidRequestStructure()
 	}
+
+	var correlationId string
+	correlationId, ok = ctx.Value(commons.ContextKeyCorrelationID).(string)
+	if !ok {
+		level.Error(logger).Log("message", "encoding: no correlation id in context")
+		return &pb.BookRequest{}, ErrNoCorrelationId()
+	}
+
 	return &pb.BookRequest{
-		Token: req.Token,
-		Date:  req.Date.Unix(),
+		Token:         req.Token,
+		Date:          req.Date.Unix(),
+		CorrelationId: correlationId,
 	}, nil
 }
 
 func decodeGRPCBookResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply, ok := grpcReply.(*pb.BookResponse)
 	if !ok {
+		level.Error(logger).Log("message", "encoding: invalid book response structure")
 		return &BookResponse{}, ErrInvalidResponseStructure()
 	}
+
+	// ctx = context.WithValue(ctx, commons.ContextKeyCorrelationID, reply.CorrelationId)
+
 	return &BookResponse{
 		Id:  int(reply.Id),
 		Err: str2err(reply.Error),
 	}, nil
 }
 
-func encodeGRPCCheckRequest(_ context.Context, request interface{}) (interface{}, error) {
+func encodeGRPCCheckRequest(ctx context.Context, request interface{}) (interface{}, error) {
 	req, ok := request.(*CheckRequest)
 	if !ok {
 		return &pb.CheckRequest{}, ErrInvalidRequestStructure()
@@ -65,7 +82,7 @@ func encodeGRPCCheckRequest(_ context.Context, request interface{}) (interface{}
 	}, nil
 }
 
-func decodeGRPCCheckResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+func decodeGRPCCheckResponse(ctx context.Context, grpcReply interface{}) (interface{}, error) {
 	reply, ok := grpcReply.(*pb.CheckResponse)
 	if !ok {
 		return &CheckResponse{}, ErrInvalidResponseStructure()

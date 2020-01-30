@@ -13,27 +13,24 @@ import (
 	"syscall"
 
 	kitlog "github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/oklog/oklog/pkg/group"
 	"google.golang.org/grpc"
 )
 
 func main() {
-
-	httpAddr := commons.ServerHttpAddress
-	clientsGrpcAddr := commons.ClientsGrpcAddr
-	roomsGrpcAddr := commons.RoomsGrpcAddr
-
 	logger := kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stdout))
-	errLogger := kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stderr))
+	logger = level.NewFilter(logger, commons.LoggingLevel)
+	logger = kitlog.With(logger, "caller", kitlog.DefaultCaller)
 
-	clientsGRPCconn, err := grpc.Dial(clientsGrpcAddr, grpc.WithInsecure())
+	clientsGRPCconn, err := grpc.Dial(commons.ClientsGrpcAddr, grpc.WithInsecure())
 	if err != nil {
-		errLogger.Log("transport", "gRPC", "message", "could not connect to clients service", "error", err)
+		level.Error(logger).Log("transport", "gRPC", "message", "could not connect to clients service", "error", err)
 	}
 
-	roomsGRPCconn, err := grpc.Dial(roomsGrpcAddr, grpc.WithInsecure())
+	roomsGRPCconn, err := grpc.Dial(commons.RoomsGrpcAddr, grpc.WithInsecure())
 	if err != nil {
-		errLogger.Log("transport", "gRPC", "message", "could not connect to rooms service", "error", err)
+		level.Error(logger).Log("transport", "gRPC", "message", "could not connect to rooms service", "error", err)
 	}
 
 	var (
@@ -43,9 +40,9 @@ func main() {
 	)
 
 	var g group.Group
-	httpListener, err := net.Listen("tcp", httpAddr)
+	httpListener, err := net.Listen("tcp", commons.ServerHttpAddress)
 	if err != nil {
-		errLogger.Log("message", "could not set up HTTP listner", "error", err)
+		level.Error(logger).Log("transport", "HTTP", "message", "could not set up HTTP listner", "error", err)
 	}
 	g.Add(func() error {
 		return http.Serve(httpListener, httpHandler)
@@ -67,6 +64,6 @@ func main() {
 		close(cancelInterrupt)
 	})
 
-	logger.Log("HTTP", "listening", "addr", httpAddr)
+	level.Info(logger).Log("HTTP", "listening", "addr", commons.ServerHttpAddress)
 	g.Run()
 }

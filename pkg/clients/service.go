@@ -2,18 +2,25 @@ package clients
 
 import (
 	"context"
-	"go-booking-service/commons"
 	"os"
 	"time"
 
+	"go-booking-service/commons"
+
 	kitlog "github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var errLogger = kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stderr))
+var logger = kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stdout))
+
+func init() {
+	logger = level.NewFilter(logger, commons.LoggingLevel)
+	logger = kitlog.With(logger, "caller", kitlog.DefaultCaller)
+}
 
 type Service interface {
 	Authorize(context.Context, string, string) (string, error)
@@ -34,6 +41,7 @@ type EncoderDecoder interface {
 type ServiceOption func(*ClientsService)
 
 func WithEncoder(e EncoderDecoder) ServiceOption {
+	level.Info(logger).Log("message", "Setting up encoder")
 	return func(c *ClientsService) {
 		c.encoder = e
 	}
@@ -41,16 +49,17 @@ func WithEncoder(e EncoderDecoder) ServiceOption {
 
 func WithMongoDB(url, database string) ServiceOption {
 	return func(c *ClientsService) {
+		level.Info(logger).Log("message", "Setting up mongodb database")
 		db, err := mongo.NewClient(options.Client().ApplyURI(url))
 		if err != nil {
-			errLogger.Log("message", "could not set up mongo client", "error", err)
+			level.Error(logger).Log("message", "could not set up mongo client", "error", err)
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
 		err = db.Connect(ctx)
 		if err != nil {
-			errLogger.Log("message", "could not connect to database", "error", err)
+			level.Error(logger).Log("message", "could not connect to database", "error", err)
 		}
 		c.db = db.Database(database)
 	}
@@ -65,19 +74,21 @@ func NewClientsServer(opts ...ServiceOption) *ClientsService {
 }
 
 func (c *ClientsService) Authorize(ctx context.Context, user, password string) (string, error) {
+	level.Info(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "Authorize attempt", "user", user, "password", password)
 	users := c.db.Collection(commons.MongoClientCollection)
 	result := struct {
 		User     string
 		Password string
 	}{}
 	filter := bson.D{{"user", user}}
-	err := users.FindOne(context.Background(), filter).Decode(&result)
+	err := users.FindOne(ctx, filter).Decode(&result)
 	if err != nil {
-		errLogger.Log("message", "error retrieving user", "error", err)
+		level.Error(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "error retrieving user", "error", err)
 		return "", ErrInvalidCredentials()
 	}
 
 	if result.Password != password {
+		level.Error(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "error password does not match")
 		return "", ErrInvalidCredentials()
 	}
 
@@ -89,6 +100,7 @@ func (c *ClientsService) Authorize(ctx context.Context, user, password string) (
 }
 
 func (c *ClientsService) Validate(ctx context.Context, token string) (string, error) {
+	level.Info(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "Validate attempt", "token", token)
 	user, err := c.encoder.Decode(token, commons.JWTSecret)
 	if err != nil {
 		return "", err
@@ -100,9 +112,9 @@ func (c *ClientsService) Validate(ctx context.Context, token string) (string, er
 		Password string
 	}{}
 	filter := bson.D{{"user", user}}
-	err = users.FindOne(context.Background(), filter).Decode(&result)
+	err = users.FindOne(ctx, filter).Decode(&result)
 	if err != nil {
-		errLogger.Log("message", "error retrieving user", "error", err)
+		level.Error(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "error retrieving user", "error", err)
 		return "", ErrUserNotFound()
 	}
 
@@ -110,12 +122,12 @@ func (c *ClientsService) Validate(ctx context.Context, token string) (string, er
 }
 
 func (c *ClientsService) Create(ctx context.Context, user, password string) error {
-
+	level.Info(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "Create attempt", "user", user, "password", password)
 	users := c.db.Collection(commons.MongoClientCollection)
 
-	_, err := users.InsertOne(context.Background(), bson.M{"user": user, "password": password})
+	_, err := users.InsertOne(ctx, bson.M{"user": user, "password": password})
 	if err != nil {
-		errLogger.Log("message", "error inserting in database", "error", err)
+		level.Error(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "error inserting in database", "error", err)
 		return ErrUserExists()
 	}
 

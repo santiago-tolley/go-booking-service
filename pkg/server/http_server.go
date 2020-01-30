@@ -7,11 +7,13 @@ import (
 	"strings"
 	"time"
 
+	"go-booking-service/commons"
 	"go-booking-service/pkg/clients"
 	"go-booking-service/pkg/rooms"
 
 	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -23,33 +25,54 @@ func NewHTTPHandler(endpoint Endpoints) http.Handler {
 		endpoint.BookEndpoint,
 		decodeHTTPBookRequest,
 		encodeHTTPGenericResponse,
+		httptransport.ServerBefore(addCorrelationId, validateToken),
 	))
 
 	m.Methods("GET").Path("/check/{date}").Handler(httptransport.NewServer(
 		endpoint.CheckEndpoint,
 		decodeHTTPCheckRequest,
 		encodeHTTPGenericResponse,
+		httptransport.ServerBefore(addCorrelationId),
 	))
 
 	m.Methods("POST").Path("/authorize/").Handler(httptransport.NewServer(
 		endpoint.AuthorizeEndpoint,
 		decodeHTTPAuthorizeRequest,
 		encodeHTTPGenericResponse,
+		httptransport.ServerBefore(addCorrelationId),
 	))
 
 	m.Methods("POST").Path("/validate/").Handler(httptransport.NewServer(
 		endpoint.ValidateEndpoint,
 		decodeHTTPValidateRequest,
 		encodeHTTPGenericResponse,
+		httptransport.ServerBefore(addCorrelationId),
 	))
 
 	m.Methods("POST").Path("/create/").Handler(httptransport.NewServer(
 		endpoint.CreateEndpoint,
 		decodeHTTPCreateRequest,
 		encodeHTTPGenericResponse,
+		httptransport.ServerBefore(addCorrelationId),
 	))
 
 	return m
+}
+
+func addCorrelationId(ctx context.Context, r *http.Request) context.Context {
+	uuid := uuid.New()
+
+	ctx = context.WithValue(ctx, commons.ContextKeyCorrelationID, uuid)
+	return ctx
+}
+
+func validateToken(ctx context.Context, r *http.Request) context.Context {
+	// take token from request header
+
+	// validate with /validate endpoint
+
+	// decide if request goes through or is blocked... (cancel context? write response?)
+	return ctx
 }
 
 func decodeHTTPBookRequest(_ context.Context, r *http.Request) (interface{}, error) {
