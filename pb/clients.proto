@@ -10,7 +10,6 @@ service Clients {
 message AuthorizeRequest {
     string user = 1;
     string password = 2;
-    string correlationId = 3;
 }
 
 message AuthorizeResponse {
@@ -20,7 +19,6 @@ message AuthorizeResponse {
 
 message ValidateRequest {
     string token = 1;
-    string correlationId = 2;
 }
 
 message ValidateResponse {
@@ -31,7 +29,6 @@ message ValidateResponse {
 message CreateRequest {
     string user = 1;
     string password = 2;
-    string correlationId = 3;
 }
 
 message CreateResponse {

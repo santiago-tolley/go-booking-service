@@ -27,7 +27,8 @@ var (
 	MongoRoomCollection = getEnv("MONGO_ROOM_COLLECTION", "rooms")
 	MongoRoomDBTest     = getEnv("MONGO_ROOM_DB_TEST", "test-rooms-service")
 
-	LoggingLevel = level.AllowDebug() // Error > Warn > Info > Debug
+	LogLevelSwitch = getEnv("LOG_LEVEL", "DEBUG")
+	LoggingLevel   = level.AllowDebug() // Error > Warn > Info > Debug
 )
 
 func getEnv(name, def string) string {
@@ -45,5 +46,19 @@ func (c contextKey) String() string {
 }
 
 var (
-	ContextKeyCorrelationID = contextKey("uuid")
+	ContextKeyCorrelationID  = contextKey("uuid")
+	MetaDataKeyCorrelationID = "uuid"
 )
+
+func init() {
+	switch LogLevelSwitch {
+	case "DEBUG":
+		LoggingLevel = level.AllowDebug()
+	case "INFO":
+		LoggingLevel = level.AllowInfo()
+	case "WARN":
+		LoggingLevel = level.AllowWarn()
+	case "ERROR":
+		LoggingLevel = level.AllowError()
+	}
+}

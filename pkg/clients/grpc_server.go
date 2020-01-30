@@ -7,6 +7,8 @@ import (
 
 	"github.com/go-kit/kit/log/level"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
+	"github.com/google/uuid"
+	"google.golang.org/grpc/metadata"
 )
 
 type GrpcServer struct {
@@ -21,18 +23,37 @@ func NewGRPCServer(endpoints Endpoints) *GrpcServer {
 			endpoints.AuthorizeEndpoint,
 			decodeGRPCAuthorizeRequest,
 			encodeGRPCAuthorizeResponse,
+			grpctransport.ServerBefore(setContextCorrelationId),
 		),
 		validate: grpctransport.NewServer(
 			endpoints.ValidateEndpoint,
 			decodeGRPCValidateRequest,
 			encodeGRPCValidateResponse,
+			grpctransport.ServerBefore(setContextCorrelationId),
 		),
 		create: grpctransport.NewServer(
 			endpoints.CreateEndpoint,
 			decodeGRPCCreateRequest,
 			encodeGRPCCreateResponse,
+			grpctransport.ServerBefore(setContextCorrelationId),
 		),
 	}
+}
+
+func setContextCorrelationId(ctx context.Context, md metadata.MD) context.Context {
+	if s, ok := md[commons.MetaDataKeyCorrelationID]; !ok || len(s) == 0 {
+		level.Error(logger).Log("message", "setting metadata", "error", "no correlation id in metadata")
+		return ctx
+	}
+
+	level.Debug(logger).Log("message", "setting context", "metadata", md[commons.MetaDataKeyCorrelationID][0])
+	correlationID, err := uuid.Parse(md[commons.MetaDataKeyCorrelationID][0])
+	if err != nil {
+		level.Error(logger).Log("message", "setting metadata", "error", "invalid correlation id in metadata")
+		return ctx
+	}
+	ctx = context.WithValue(ctx, commons.ContextKeyCorrelationID, correlationID)
+	return ctx
 }
 
 func (s *GrpcServer) Authorize(ctx context.Context, req *pb.AuthorizeRequest) (*pb.AuthorizeResponse, error) {
@@ -76,12 +97,9 @@ func decodeGRPCAuthorizeRequest(ctx context.Context, grpcReq interface{}) (inter
 	if !ok {
 		return &AuthorizeRequest{}, ErrInvalidRequestStructure()
 	}
-	level.Info(logger).Log("correlation ID", req.CorrelationId, "message", "in decode req grpcserver")
-	ctx = context.WithValue(ctx, commons.ContextKeyCorrelationID, req.CorrelationId)
 	return &AuthorizeRequest{
-		User:          req.User,
-		Password:      req.Password,
-		CorrelationID: req.CorrelationId,
+		User:     req.User,
+		Password: req.Password,
 	}, nil
 }
 

@@ -1,9 +1,8 @@
 package clients
 
 type AuthorizeRequest struct {
-	User          string `json:"user"`
-	Password      string `json:"password"`
-	CorrelationID string `json:"correlationId`
+	User     string `json:"user"`
+	Password string `json:"password"`
 }
 
 type AuthorizeResponse struct {
@@ -12,8 +11,7 @@ type AuthorizeResponse struct {
 }
 
 type ValidateRequest struct {
-	Token         string `json:"token"`
-	CorrelationID string `json:"correlationId`
+	Token string `json:"token"`
 }
 
 type ValidateResponse struct {
@@ -22,9 +20,8 @@ type ValidateResponse struct {
 }
 
 type CreateRequest struct {
-	User          string `json:"user"`
-	Password      string `json:"password"`
-	CorrelationID string `json:"correlationId`
+	User     string `json:"user"`
+	Password string `json:"password"`
 }
 
 type CreateResponse struct {

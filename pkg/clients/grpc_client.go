@@ -8,6 +8,7 @@ import (
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	"go-booking-service/commons"
 	"go-booking-service/pb"
@@ -21,6 +22,7 @@ func NewGRPCClient(conn *grpc.ClientConn) Endpoints {
 		encodeGRPCAuthorizeRequest,
 		decodeGRPCAuthorizeResponse,
 		pb.AuthorizeResponse{},
+		grpctransport.ClientBefore(setMDCorrelationID),
 	).Endpoint()
 
 	validateEndpoint := grpctransport.NewClient(
@@ -30,6 +32,7 @@ func NewGRPCClient(conn *grpc.ClientConn) Endpoints {
 		encodeGRPCValidateRequest,
 		decodeGRPCValidateResponse,
 		pb.ValidateResponse{},
+		grpctransport.ClientBefore(setMDCorrelationID),
 	).Endpoint()
 
 	createEndpoint := grpctransport.NewClient(
@@ -39,6 +42,7 @@ func NewGRPCClient(conn *grpc.ClientConn) Endpoints {
 		encodeGRPCCreateRequest,
 		decodeGRPCCreateResponse,
 		pb.CreateResponse{},
+		grpctransport.ClientBefore(setMDCorrelationID),
 	).Endpoint()
 
 	return Endpoints{
@@ -48,24 +52,28 @@ func NewGRPCClient(conn *grpc.ClientConn) Endpoints {
 	}
 }
 
+func setMDCorrelationID(ctx context.Context, md *metadata.MD) context.Context {
+	level.Debug(logger).Log("message", "setMDCorrelationID", "ctx", ctx.Value(commons.ContextKeyCorrelationID))
+	correlationId, ok := ctx.Value(commons.ContextKeyCorrelationID).(uuid.UUID)
+	if !ok {
+		level.Error(logger).Log("message", "setting metadata", "error", "no correlation id in context")
+		return ctx
+	}
+
+	level.Debug(logger).Log("message", "setting metadata", "context", correlationId.String())
+	(*md)[commons.MetaDataKeyCorrelationID] = append((*md)[commons.MetaDataKeyCorrelationID], correlationId.String())
+	return ctx
+}
+
 func encodeGRPCAuthorizeRequest(ctx context.Context, request interface{}) (interface{}, error) {
 	req, ok := request.(*AuthorizeRequest)
 	if !ok {
 		return &pb.AuthorizeRequest{}, ErrInvalidRequestStructure()
 	}
 
-	var correlationId uuid.UUID
-	correlationId, ok = ctx.Value(commons.ContextKeyCorrelationID).(uuid.UUID)
-	if !ok {
-		level.Error(logger).Log("message", "encoding: no correlation id in context")
-		return &pb.BookRequest{}, ErrNoCorrelationId()
-	}
-	level.Info(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "in encode grpcClient")
-
 	return &pb.AuthorizeRequest{
-		User:          req.User,
-		Password:      req.Password,
-		CorrelationId: correlationId.String(),
+		User:     req.User,
+		Password: req.Password,
 	}, nil
 }
 

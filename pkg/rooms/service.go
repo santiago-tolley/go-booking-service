@@ -172,7 +172,7 @@ func (r *RoomsService) Book(ctx context.Context, token string, date time.Time) (
 	level.Info(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "Book attempt", "date", date.String(), "token", token)
 
 	// Validate token
-	level.Debug(logger).Log("message", "Validating token %v", token)
+	level.Debug(logger).Log("message", "Validating token", "token", token)
 	user, err := r.validator.Validate(ctx, token)
 	if err != nil {
 		level.Error(logger).Log("message", "invalid authentication token", "error", err)

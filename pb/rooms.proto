@@ -9,8 +9,6 @@ service Rooms {
 message BookRequest {
     string token = 1;
     int64 date = 2;
-    string correlationId = 3;
-}
 
 message BookResponse {
     int64 id = 1;
@@ -19,7 +17,6 @@ message BookResponse {
 
 message CheckRequest {
     int64 date = 1;
-    string correlationId = 2;
 }
 
 message CheckResponse {
