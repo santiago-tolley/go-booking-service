@@ -21,7 +21,7 @@ import (
 func main() {
 	logger := kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stdout))
 	logger = level.NewFilter(logger, commons.LoggingLevel)
-	logger = kitlog.With(logger, "caller", kitlog.DefaultCaller)
+	logger = kitlog.With(logger, "origin", "Server", "caller", kitlog.DefaultCaller)
 
 	clientsGRPCconn, err := grpc.Dial(commons.ClientsGrpcAddr, grpc.WithInsecure())
 	if err != nil {

@@ -53,21 +53,21 @@ func NewGRPCClient(conn *grpc.ClientConn) Endpoints {
 }
 
 func setMDCorrelationID(ctx context.Context, md *metadata.MD) context.Context {
-	level.Debug(logger).Log("message", "setMDCorrelationID", "ctx", ctx.Value(commons.ContextKeyCorrelationID))
 	correlationId, ok := ctx.Value(commons.ContextKeyCorrelationID).(uuid.UUID)
 	if !ok {
 		level.Error(logger).Log("message", "setting metadata", "error", "no correlation id in context")
 		return ctx
 	}
 
-	level.Debug(logger).Log("message", "setting metadata", "context", correlationId.String())
 	(*md)[commons.MetaDataKeyCorrelationID] = append((*md)[commons.MetaDataKeyCorrelationID], correlationId.String())
 	return ctx
 }
 
 func encodeGRPCAuthorizeRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	level.Debug(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "encoding authorize request")
 	req, ok := request.(*AuthorizeRequest)
 	if !ok {
+		level.Error(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "encoding: invalid authorize request structure")
 		return &pb.AuthorizeRequest{}, ErrInvalidRequestStructure()
 	}
 
@@ -77,9 +77,11 @@ func encodeGRPCAuthorizeRequest(ctx context.Context, request interface{}) (inter
 	}, nil
 }
 
-func decodeGRPCAuthorizeResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+func decodeGRPCAuthorizeResponse(ctx context.Context, grpcReply interface{}) (interface{}, error) {
+	level.Debug(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding authorize response")
 	reply, ok := grpcReply.(*pb.AuthorizeResponse)
 	if !ok {
+		level.Error(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding: invalid authorize response structure")
 		return &AuthorizeResponse{}, ErrInvalidResponseStructure()
 	}
 	return &AuthorizeResponse{
@@ -88,9 +90,11 @@ func decodeGRPCAuthorizeResponse(_ context.Context, grpcReply interface{}) (inte
 	}, nil
 }
 
-func encodeGRPCValidateRequest(_ context.Context, request interface{}) (interface{}, error) {
+func encodeGRPCValidateRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	level.Debug(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "encoding validate request")
 	req, ok := request.(*ValidateRequest)
 	if !ok {
+		level.Error(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "encoding: invalid validate request structure")
 		return &pb.ValidateRequest{}, ErrInvalidRequestStructure()
 	}
 	return &pb.ValidateRequest{
@@ -98,9 +102,11 @@ func encodeGRPCValidateRequest(_ context.Context, request interface{}) (interfac
 	}, nil
 }
 
-func decodeGRPCValidateResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+func decodeGRPCValidateResponse(ctx context.Context, grpcReply interface{}) (interface{}, error) {
+	level.Debug(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding validate response")
 	reply, ok := grpcReply.(*pb.ValidateResponse)
 	if !ok {
+		level.Error(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding: invalid validate response structure")
 		return &ValidateResponse{}, ErrInvalidResponseStructure()
 	}
 	return &ValidateResponse{
@@ -109,9 +115,11 @@ func decodeGRPCValidateResponse(_ context.Context, grpcReply interface{}) (inter
 	}, nil
 }
 
-func encodeGRPCCreateRequest(_ context.Context, request interface{}) (interface{}, error) {
+func encodeGRPCCreateRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	level.Debug(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "encoding create request")
 	req, ok := request.(*CreateRequest)
 	if !ok {
+		level.Error(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "encoding: invalid create request structure")
 		return &pb.CreateRequest{}, ErrInvalidRequestStructure()
 	}
 	return &pb.CreateRequest{
@@ -120,9 +128,11 @@ func encodeGRPCCreateRequest(_ context.Context, request interface{}) (interface{
 	}, nil
 }
 
-func decodeGRPCCreateResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+func decodeGRPCCreateResponse(ctx context.Context, grpcReply interface{}) (interface{}, error) {
+	level.Debug(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding create response")
 	reply, ok := grpcReply.(*pb.CreateResponse)
 	if !ok {
+		level.Error(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding: invalid create response structure")
 		return &CreateResponse{}, ErrInvalidResponseStructure()
 	}
 	return &CreateResponse{

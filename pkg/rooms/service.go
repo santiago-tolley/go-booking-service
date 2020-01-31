@@ -20,7 +20,7 @@ var logger = kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stdout))
 
 func init() {
 	logger = level.NewFilter(logger, commons.LoggingLevel)
-	logger = kitlog.With(logger, "caller", kitlog.DefaultCaller)
+	logger = kitlog.With(logger, "origin", "Rooms", "caller", kitlog.DefaultCaller)
 }
 
 type Service interface {
@@ -172,14 +172,14 @@ func (r *RoomsService) Book(ctx context.Context, token string, date time.Time) (
 	level.Info(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "Book attempt", "date", date.String(), "token", token)
 
 	// Validate token
-	level.Debug(logger).Log("message", "Validating token", "token", token)
+	level.Debug(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "Validating token", "token", token)
 	user, err := r.validator.Validate(ctx, token)
 	if err != nil {
-		level.Error(logger).Log("message", "invalid authentication token", "error", err)
+		level.Error(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "invalid authentication token", "error", err)
 		return 0, err
 	}
 
-	level.Debug(logger).Log("message", "Checking available rooms for %v", user)
+	level.Debug(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "Checking available rooms for %v", user)
 	var booked bool
 	for id, room := range *r.rooms {
 		if room.Book[date] == "" {
@@ -196,16 +196,16 @@ func (r *RoomsService) Book(ctx context.Context, token string, date time.Time) (
 					change := bson.M{"$push": bson.M{"bookings": bson.M{"date": date, "client": user}}}
 					_, err := users.UpdateOne(ctx, match, change)
 					if err != nil {
-						level.Error(logger).Log("message", "error updating room", "error", err)
+						level.Error(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "error updating room", "error", err)
 					}
 				} else {
-					level.Error(logger).Log("message", "could not save room status, no database client set up", "error", err)
+					level.Error(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "could not save room status, no database client set up", "error", err)
 				}
 				return id, nil
 			}
 		}
 	}
-	level.Error(logger).Log("message", "No rooms available", "date", date.String(), "user", user)
+	level.Error(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "No rooms available", "date", date.String(), "user", user)
 	return 0, ErrNoRoomAvailable()
 }
 

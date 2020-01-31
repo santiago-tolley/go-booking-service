@@ -15,7 +15,7 @@ var logger = kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stdout))
 
 func init() {
 	logger = level.NewFilter(logger, commons.LoggingLevel)
-	logger = kitlog.With(logger, "caller", kitlog.DefaultCaller)
+	logger = kitlog.With(logger, "origin", "Server", "caller", kitlog.DefaultCaller)
 }
 
 type ClientsService interface {

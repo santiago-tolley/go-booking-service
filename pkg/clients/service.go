@@ -19,7 +19,7 @@ var logger = kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stdout))
 
 func init() {
 	logger = level.NewFilter(logger, commons.LoggingLevel)
-	logger = kitlog.With(logger, "caller", kitlog.DefaultCaller)
+	logger = kitlog.With(logger, "origin", "Clients", "caller", kitlog.DefaultCaller)
 }
 
 type Service interface {
@@ -94,6 +94,7 @@ func (c *ClientsService) Authorize(ctx context.Context, user, password string) (
 
 	token, err := c.encoder.Encode(user, commons.JWTSecret, time.Now().Local().Add(commons.JWTExpiration))
 	if err != nil {
+		level.Error(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "could not generate token", "error", err)
 		return "", err
 	}
 	return token, nil
@@ -103,6 +104,7 @@ func (c *ClientsService) Validate(ctx context.Context, token string) (string, er
 	level.Info(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "Validate attempt", "token", token)
 	user, err := c.encoder.Decode(token, commons.JWTSecret)
 	if err != nil {
+		level.Error(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "invalid token", "error", err)
 		return "", err
 	}
 

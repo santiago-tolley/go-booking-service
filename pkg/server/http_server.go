@@ -12,6 +12,7 @@ import (
 	"go-booking-service/pkg/rooms"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/log/level"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -76,34 +77,40 @@ func validateToken(ctx context.Context, r *http.Request) context.Context {
 }
 
 func decodeHTTPBookRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	level.Debug(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding http book request")
 	token := getToken(r)
 	date, err := getDate(r)
 	return &BookRequest{Token: token, Date: date}, err
 }
 
 func decodeHTTPCheckRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	level.Debug(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding http check request")
 	date, err := getDate(r)
 	return &CheckRequest{date}, err
 }
 
 func decodeHTTPAuthorizeRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	level.Debug(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding http authorize request")
 	var req = &AuthorizeRequest{}
 	err := json.NewDecoder(r.Body).Decode(&req)
 	return req, err
 }
 
 func decodeHTTPValidateRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	level.Debug(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding http validate request")
 	token := getToken(r)
 	return &ValidateRequest{Token: token}, nil
 }
 
 func decodeHTTPCreateRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	level.Debug(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding http create request")
 	var req = &CreateRequest{}
 	err := json.NewDecoder(r.Body).Decode(&req)
 	return req, err
 }
 
 func encodeHTTPGenericResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+	level.Debug(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "encoding http response")
 	if f, ok := response.(endpoint.Failer); ok && f.Failed() != nil {
 		errorEncoder(ctx, f.Failed(), w)
 		return nil
