@@ -9,6 +9,7 @@ service Rooms {
 message BookRequest {
     string token = 1;
     int64 date = 2;
+}
 
 message BookResponse {
     int64 id = 1;
