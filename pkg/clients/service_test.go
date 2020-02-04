@@ -21,7 +21,8 @@ import (
 var testDB *mongo.Database
 
 func init() {
-	errLogger := kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stderr))
+	errLogger := kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stdout))
+	errLogger = kitlog.With(errLogger, "origin", "Test", "caller", kitlog.DefaultCaller)
 
 	testClient, err := mongo.NewClient(options.Client().ApplyURI(commons.MongoClientURL))
 	if err != nil {
@@ -75,8 +76,6 @@ var authorizeTest = []struct {
 	encoder  EncoderDecoder
 	want     string
 	err      error
-	init     func(*mongo.Database)
-	restore  func(*mongo.Database)
 }{
 	{
 		name:     "should return the token with the user",
@@ -269,14 +268,17 @@ var createTest = []struct {
 
 func TestCreate(t *testing.T) {
 	t.Log("Create")
-
+	defer func() {
+		users := testDB.Collection(commons.MongoClientCollection)
+		users.Drop(context.Background())
+	}()
 	for _, testcase := range createTest {
 		t.Logf(testcase.name)
 		testcase.init(testDB)
-		defer testcase.restore(testDB)
 		c := &ClientsService{mockCorrectEncoderDecoder{}, testDB}
 		err := c.Create(context.Background(), testcase.user, testcase.password)
 
 		assert.DeepEqual(t, err, testcase.err)
+		testcase.restore(testDB)
 	}
 }

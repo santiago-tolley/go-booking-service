@@ -4,7 +4,10 @@ import (
 	"context"
 	"time"
 
+	"go-booking-service/commons"
+
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/log/level"
 )
 
 type Endpoints struct {

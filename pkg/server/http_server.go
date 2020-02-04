@@ -76,33 +76,33 @@ func validateToken(ctx context.Context, r *http.Request) context.Context {
 	return ctx
 }
 
-func decodeHTTPBookRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeHTTPBookRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	level.Debug(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding http book request")
 	token := getToken(r)
 	date, err := getDate(r)
 	return &BookRequest{Token: token, Date: date}, err
 }
 
-func decodeHTTPCheckRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeHTTPCheckRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	level.Debug(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding http check request")
 	date, err := getDate(r)
 	return &CheckRequest{date}, err
 }
 
-func decodeHTTPAuthorizeRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeHTTPAuthorizeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	level.Debug(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding http authorize request")
 	var req = &AuthorizeRequest{}
 	err := json.NewDecoder(r.Body).Decode(&req)
 	return req, err
 }
 
-func decodeHTTPValidateRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeHTTPValidateRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	level.Debug(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding http validate request")
 	token := getToken(r)
 	return &ValidateRequest{Token: token}, nil
 }
 
-func decodeHTTPCreateRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeHTTPCreateRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	level.Debug(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding http create request")
 	var req = &CreateRequest{}
 	err := json.NewDecoder(r.Body).Decode(&req)
