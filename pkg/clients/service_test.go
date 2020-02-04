@@ -75,6 +75,8 @@ var authorizeTest = []struct {
 	password string
 	encoder  EncoderDecoder
 	want     string
+	init     func(*mongo.Database)
+	restore  func(*mongo.Database)
 	err      error
 }{
 	{
