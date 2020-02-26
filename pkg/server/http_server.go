@@ -4,13 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
+	"go-booking-service/commons"
 	"go-booking-service/pkg/clients"
 	"go-booking-service/pkg/rooms"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/log/level"
 	httptransport "github.com/go-kit/kit/transport/http"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -22,61 +26,91 @@ func NewHTTPHandler(endpoint Endpoints) http.Handler {
 		endpoint.BookEndpoint,
 		decodeHTTPBookRequest,
 		encodeHTTPGenericResponse,
+		httptransport.ServerBefore(addCorrelationId, validateToken),
 	))
 
 	m.Methods("GET").Path("/check/{date}").Handler(httptransport.NewServer(
 		endpoint.CheckEndpoint,
 		decodeHTTPCheckRequest,
 		encodeHTTPGenericResponse,
+		httptransport.ServerBefore(addCorrelationId),
 	))
 
 	m.Methods("POST").Path("/authorize/").Handler(httptransport.NewServer(
 		endpoint.AuthorizeEndpoint,
 		decodeHTTPAuthorizeRequest,
 		encodeHTTPGenericResponse,
+		httptransport.ServerBefore(addCorrelationId),
 	))
 
 	m.Methods("POST").Path("/validate/").Handler(httptransport.NewServer(
 		endpoint.ValidateEndpoint,
 		decodeHTTPValidateRequest,
 		encodeHTTPGenericResponse,
+		httptransport.ServerBefore(addCorrelationId),
+	))
+
+	m.Methods("POST").Path("/create/").Handler(httptransport.NewServer(
+		endpoint.CreateEndpoint,
+		decodeHTTPCreateRequest,
+		encodeHTTPGenericResponse,
+		httptransport.ServerBefore(addCorrelationId),
 	))
 
 	return m
 }
 
-func decodeHTTPBookRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req = BookRequest{}
+func addCorrelationId(ctx context.Context, r *http.Request) context.Context {
+	uuid := uuid.New()
+
+	ctx = context.WithValue(ctx, commons.ContextKeyCorrelationID, uuid)
+	return ctx
+}
+
+func validateToken(ctx context.Context, r *http.Request) context.Context {
+	// take token from request header
+
+	// validate with /validate endpoint
+
+	// decide if request goes through or is blocked... (cancel context? write response?)
+	return ctx
+}
+
+func decodeHTTPBookRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	level.Debug(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding http book request")
+	token := getToken(r)
+	date, err := getDate(r)
+	return &BookRequest{Token: token, Date: date}, err
+}
+
+func decodeHTTPCheckRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	level.Debug(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding http check request")
+	date, err := getDate(r)
+	return &CheckRequest{date}, err
+}
+
+func decodeHTTPAuthorizeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	level.Debug(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding http authorize request")
+	var req = &AuthorizeRequest{}
 	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		return req, err
-	}
-	d := mux.Vars(r)["date"]
-	date, err := time.Parse("2006-01-02", d)
-	req.Date = date
 	return req, err
 }
 
-func decodeHTTPCheckRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	d := mux.Vars(r)["date"]
-	date, err := time.Parse("2006-01-02", d)
-
-	return CheckRequest{date}, err
+func decodeHTTPValidateRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	level.Debug(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding http validate request")
+	token := getToken(r)
+	return &ValidateRequest{Token: token}, nil
 }
 
-func decodeHTTPAuthorizeRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req = AuthorizeRequest{}
-	err := json.NewDecoder(r.Body).Decode(&req)
-	return req, err
-}
-
-func decodeHTTPValidateRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req = ValidateRequest{}
+func decodeHTTPCreateRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	level.Debug(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding http create request")
+	var req = &CreateRequest{}
 	err := json.NewDecoder(r.Body).Decode(&req)
 	return req, err
 }
 
 func encodeHTTPGenericResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+	level.Debug(logger).Log("correlation ID", ctx.Value(commons.ContextKeyCorrelationID), "message", "encoding http response")
 	if f, ok := response.(endpoint.Failer); ok && f.Failed() != nil {
 		errorEncoder(ctx, f.Failed(), w)
 		return nil
@@ -112,4 +146,21 @@ func err2code(err error) int {
 
 type errorWrapper struct {
 	Error string `json:"error"`
+}
+
+// Returns token from header or "" if invalid
+func getToken(r *http.Request) string {
+	var header = r.Header.Get("Authorization")
+	auth_header := strings.Split(header, " ")
+	var token string
+	if len(auth_header) == 2 {
+		token = auth_header[1]
+	}
+	return token
+}
+
+// Returns date from query params or an error if invalid
+func getDate(r *http.Request) (time.Time, error) {
+	date := mux.Vars(r)["date"]
+	return time.Parse("2006-01-02", date)
 }

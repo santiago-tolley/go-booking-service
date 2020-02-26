@@ -2,10 +2,15 @@ package rooms
 
 import (
 	"context"
+
+	"go-booking-service/commons"
 	"go-booking-service/pb"
 
+	"github.com/go-kit/kit/log/level"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 func NewGRPCClient(conn *grpc.ClientConn) Endpoints {
@@ -16,6 +21,7 @@ func NewGRPCClient(conn *grpc.ClientConn) Endpoints {
 		encodeGRPCBookRequest,
 		decodeGRPCBookResponse,
 		pb.BookResponse{},
+		grpctransport.ClientBefore(setMDCorrelationID),
 	).Endpoint()
 
 	checkEndpoint := grpctransport.NewClient(
@@ -25,6 +31,7 @@ func NewGRPCClient(conn *grpc.ClientConn) Endpoints {
 		encodeGRPCCheckRequest,
 		decodeGRPCCheckResponse,
 		pb.CheckResponse{},
+		grpctransport.ClientBefore(setMDCorrelationID),
 	).Endpoint()
 
 	return Endpoints{
@@ -33,9 +40,22 @@ func NewGRPCClient(conn *grpc.ClientConn) Endpoints {
 	}
 }
 
-func encodeGRPCBookRequest(_ context.Context, request interface{}) (interface{}, error) {
+func setMDCorrelationID(ctx context.Context, md *metadata.MD) context.Context {
+	correlationId, ok := ctx.Value(commons.ContextKeyCorrelationID).(uuid.UUID)
+	if !ok {
+		level.Error(logger).Log("message", "setting metadata", "error", "no correlation id in context")
+		return ctx
+	}
+
+	(*md)[commons.MetaDataKeyCorrelationID] = append((*md)[commons.MetaDataKeyCorrelationID], correlationId.String())
+	return ctx
+}
+
+func encodeGRPCBookRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	level.Debug(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "encoding book request")
 	req, ok := request.(*BookRequest)
 	if !ok {
+		level.Error(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "encoding: invalid book request structure")
 		return &pb.BookRequest{}, ErrInvalidRequestStructure()
 	}
 	return &pb.BookRequest{
@@ -44,9 +64,11 @@ func encodeGRPCBookRequest(_ context.Context, request interface{}) (interface{},
 	}, nil
 }
 
-func decodeGRPCBookResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+func decodeGRPCBookResponse(ctx context.Context, grpcReply interface{}) (interface{}, error) {
+	level.Debug(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding book response")
 	reply, ok := grpcReply.(*pb.BookResponse)
 	if !ok {
+		level.Error(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding: invalid book response structure")
 		return &BookResponse{}, ErrInvalidResponseStructure()
 	}
 	return &BookResponse{
@@ -55,9 +77,11 @@ func decodeGRPCBookResponse(_ context.Context, grpcReply interface{}) (interface
 	}, nil
 }
 
-func encodeGRPCCheckRequest(_ context.Context, request interface{}) (interface{}, error) {
+func encodeGRPCCheckRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	level.Debug(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "encoding check request")
 	req, ok := request.(*CheckRequest)
 	if !ok {
+		level.Error(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "encoding: invalid check request structure")
 		return &pb.CheckRequest{}, ErrInvalidRequestStructure()
 	}
 	return &pb.CheckRequest{
@@ -65,9 +89,11 @@ func encodeGRPCCheckRequest(_ context.Context, request interface{}) (interface{}
 	}, nil
 }
 
-func decodeGRPCCheckResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+func decodeGRPCCheckResponse(ctx context.Context, grpcReply interface{}) (interface{}, error) {
+	level.Debug(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding check response")
 	reply, ok := grpcReply.(*pb.CheckResponse)
 	if !ok {
+		level.Error(logger).Log("CorrelationID", ctx.Value(commons.ContextKeyCorrelationID), "message", "decoding: invalid check response structure")
 		return &CheckResponse{}, ErrInvalidResponseStructure()
 	}
 	return &CheckResponse{

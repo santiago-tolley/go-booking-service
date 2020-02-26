@@ -1,0 +1,60 @@
+version: '3.5'
+
+services:
+    database:
+        image: 
+            mongo-image:v1 
+        container_name: 'booking_db'
+        volumes:
+            - ./booking-volume:/data/db
+        ports:
+            - '27017-27019:27017-27019'
+
+    clients: 
+        image: 
+            clients-service:v1
+        container_name: 'booking_clients'
+        environment:
+            - CLIENTS_ADDRESS=:8082
+            - MONGO_CLIENT_URL=mongodb://clients-service:clients-service@database:27017/clients-service
+        command: go run ./cmd/clients/main.go
+        links:
+            - database
+        depends_on:
+            - database
+        ports:
+            - '8082:8082'
+
+    rooms:
+        image: 
+            rooms-service:v1
+        container_name: 'booking_rooms'
+        environment:
+            - ROOMS_ADDRESS=:8081
+            - CLIENTS_ADDRESS=clients:8082
+            - MONGO_ROOM_URL=mongodb://clients-service:clients-service@database:27017/clients-service
+        command: go run ./cmd/rooms/main.go
+        links:
+            - database
+            - clients
+        depends_on:
+            - database
+        ports:
+            - '8081:8081'
+
+    server: 
+        image: 
+            server-service:v1
+        container_name: 'booking_server'
+        environment:
+            - CLIENTS_ADDRESS=clients:8082
+            - ROOMS_ADDRESS=rooms:8081
+        command: go run ./cmd/server/main.go
+        links:
+            - clients
+            - rooms 
+        depends_on:
+            - clients
+            - rooms
+        ports:
+            - '8080:8080'

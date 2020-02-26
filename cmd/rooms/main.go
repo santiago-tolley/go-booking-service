@@ -5,9 +5,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
-	"time"
 
 	"go-booking-service/commons"
 	"go-booking-service/pb"
@@ -15,49 +13,36 @@ import (
 	"go-booking-service/pkg/rooms"
 
 	kitlog "github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	"github.com/oklog/oklog/pkg/group"
 	"google.golang.org/grpc"
 )
 
 func main() {
-	grpcAddr := commons.RoomsGrpcAddr
-	clientGrpcAddr := commons.ClientsGrpcAddr
-
 	logger := kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stdout))
-	errLogger := kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stderr))
+	logger = level.NewFilter(logger, commons.LoggingLevel)
+	logger = kitlog.With(logger, "origin", "Rooms", "caller", kitlog.DefaultCaller)
 
-	clientGRPCconn, err := grpc.Dial(clientGrpcAddr, grpc.WithInsecure())
+	clientGRPCconn, err := grpc.Dial(commons.ClientsGrpcAddr, grpc.WithInsecure())
 	if err != nil {
-		errLogger.Log("transport", "gRPC", "message", "could not connect to clients service", "error", err)
+		level.Error(logger).Log("transport", "gRPC", "message", "could not connect to clients service", "error", err)
 	}
 
-	roomsCollection := []rooms.Room{
-		{
-			map[time.Time]string{},
-			&sync.Mutex{},
-		},
-		{
-			map[time.Time]string{},
-			&sync.Mutex{},
-		},
-		{
-			map[time.Time]string{},
-			&sync.Mutex{},
-		},
-	}
+	// roomsCollection := rooms.GenerateRooms(commons.RoomsNumber)
 
 	var (
-		service    = rooms.NewRoomsServer(roomsCollection, clients.NewGRPCClient(clientGRPCconn))
+		service = rooms.NewRoomsServer(rooms.WithMongoDB(commons.MongoRoomURL, commons.MongoRoomDB), //rooms.WithRooms(&roomsCollection),
+			rooms.WithLoadedRooms(), rooms.WithValidator(clients.NewGRPCClient(clientGRPCconn)))
 		endpoints  = rooms.MakeEndpoints(service)
 		grpcServer = rooms.NewGRPCServer(endpoints)
 	)
 
 	var g group.Group
 
-	grpcListener, err := net.Listen("tcp", grpcAddr)
+	grpcListener, err := net.Listen("tcp", commons.RoomsGrpcAddr)
 	if err != nil {
-		errLogger.Log("message", "could not set up gRPC listner", "error", err)
+		level.Error(logger).Log("transport", "gRPC", "message", "could not set up gRPC listner", "error", err)
 	}
 
 	g.Add(func() error {
@@ -82,6 +67,6 @@ func main() {
 		close(cancelInterrupt)
 	})
 
-	logger.Log("gRPC", "listening", "addr", grpcAddr)
+	level.Info(logger).Log("gRPC", "listening", "addr", commons.RoomsGrpcAddr)
 	g.Run()
 }

@@ -7,6 +7,8 @@ const (
 	UserNotFound             = "User not found"
 	InvalidRequestStructure  = "Invalid request structure"
 	InvalidResponseStructure = "Invalid response structure"
+	UserExists               = "User already exists"
+	NoCorrelationId          = "No correlation Id in context"
 )
 
 type ErrorWithMsg struct {
@@ -39,4 +41,12 @@ func ErrInvalidRequestStructure() error {
 
 func ErrInvalidResponseStructure() error {
 	return ErrorWithMsg{InvalidResponseStructure}
+}
+
+func ErrUserExists() error {
+	return ErrorWithMsg{UserExists}
+}
+
+func ErrNoCorrelationId() error {
+	return ErrorWithMsg{NoCorrelationId}
 }

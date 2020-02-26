@@ -2,6 +2,7 @@ package clients
 
 import (
 	"context"
+	"fmt"
 	"go-booking-service/pb"
 	"testing"
 
@@ -20,6 +21,12 @@ func (a grpcValidateCorrectMock) ServeGRPC(ctx context.Context, request interfac
 	return ctx, &pb.ValidateResponse{User: "John", Error: ""}, nil
 }
 
+type grpcCreateCorrectMock struct{}
+
+func (a grpcCreateCorrectMock) ServeGRPC(ctx context.Context, request interface{}) (context.Context, interface{}, error) {
+	return ctx, &pb.CreateResponse{Error: "error!"}, nil
+}
+
 type grpcAuthorizeWrongResponseMock struct{}
 
 func (a grpcAuthorizeWrongResponseMock) ServeGRPC(ctx context.Context, request interface{}) (context.Context, interface{}, error) {
@@ -32,6 +39,12 @@ func (a grpcValidateWrongResponseMock) ServeGRPC(ctx context.Context, request in
 	return ctx, "John", nil
 }
 
+type grpcCreateWrongResponseMock struct{}
+
+func (a grpcCreateWrongResponseMock) ServeGRPC(ctx context.Context, request interface{}) (context.Context, interface{}, error) {
+	return ctx, fmt.Errorf("error!"), nil
+}
+
 type grpcAuthorizeErrorMock struct{}
 
 func (a grpcAuthorizeErrorMock) ServeGRPC(ctx context.Context, request interface{}) (context.Context, interface{}, error) {
@@ -42,6 +55,12 @@ type grpcValidateErrorMock struct{}
 
 func (a grpcValidateErrorMock) ServeGRPC(ctx context.Context, request interface{}) (context.Context, interface{}, error) {
 	return ctx, &pb.ValidateResponse{}, ErrInvalidToken()
+}
+
+type grpcCreateErrorMock struct{}
+
+func (a grpcCreateErrorMock) ServeGRPC(ctx context.Context, request interface{}) (context.Context, interface{}, error) {
+	return ctx, &pb.CreateResponse{}, ErrInvalidCredentials()
 }
 
 var grpcServerAuthorizeTest = []struct {
@@ -133,6 +152,60 @@ var grpcServerValidateTest = []struct {
 	},
 }
 
+var grpcServerCreateTest = []struct {
+	name    string
+	server  *GrpcServer
+	request *pb.CreateRequest
+	want    *pb.CreateResponse
+	err     error
+}{
+	{
+		name: "should return the error",
+		server: &GrpcServer{
+			authorize: grpcCreateCorrectMock{},
+			validate:  grpcValidateCorrectMock{},
+			create:    grpcCreateCorrectMock{},
+		},
+		request: &pb.CreateRequest{},
+		want:    &pb.CreateResponse{Error: "error!"},
+	},
+	{
+		name: "should return en error if ServeGRPC returns an error",
+		server: &GrpcServer{
+			authorize: grpcCreateErrorMock{},
+			validate:  grpcValidateErrorMock{},
+			create:    grpcCreateErrorMock{},
+		},
+		request: &pb.CreateRequest{},
+		want:    &pb.CreateResponse{},
+		err:     ErrInvalidCredentials(),
+	},
+	{
+		name: "should return en error if the ServeGRPC response is the wrong type",
+		server: &GrpcServer{
+			authorize: grpcCreateWrongResponseMock{},
+			validate:  grpcValidateWrongResponseMock{},
+			create:    grpcCreateWrongResponseMock{},
+		},
+		request: &pb.CreateRequest{},
+		want:    &pb.CreateResponse{},
+		err:     ErrInvalidResponseStructure(),
+	},
+}
+
+func TestGRPCServerCreate(t *testing.T) {
+	t.Log("GRPCServerCreate")
+
+	for _, testcase := range grpcServerCreateTest {
+		t.Logf(testcase.name)
+
+		result, err := testcase.server.Create(context.Background(), testcase.request)
+
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
+	}
+}
+
 func TestGRPCServerValidate(t *testing.T) {
 	t.Log("GRPCServerValidate")
 
@@ -210,6 +283,38 @@ func TestDecodeGRPCValidateRequest(t *testing.T) {
 	}
 }
 
+var decodeGRPCCreateRequestTest = []struct {
+	name    string
+	request interface{}
+	want    *CreateRequest
+	err     error
+}{
+	{
+		name:    "should return the new structure with the user and password",
+		request: &pb.CreateRequest{User: "John", Password: "pass"},
+		want:    &CreateRequest{User: "John", Password: "pass"},
+	},
+	{
+		name:    "should return an error if the request has the wrong structure",
+		request: "John, pass",
+		want:    &CreateRequest{},
+		err:     ErrInvalidRequestStructure(),
+	},
+}
+
+func TestDecodeGRPCCreateRequest(t *testing.T) {
+	t.Log("decodeGRPCCreateRequest")
+
+	for _, testcase := range decodeGRPCCreateRequestTest {
+		t.Logf(testcase.name)
+
+		result, err := decodeGRPCCreateRequest(context.Background(), testcase.request)
+
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
+	}
+}
+
 var encodeGRPCAuthorizeResponseTest = []struct {
 	name    string
 	request interface{}
@@ -268,6 +373,38 @@ func TestEncodeGRPCValidateResponse(t *testing.T) {
 		t.Logf(testcase.name)
 
 		result, err := encodeGRPCValidateResponse(context.Background(), testcase.request)
+
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
+	}
+}
+
+var encodeGRPCCreateResponseTest = []struct {
+	name    string
+	request interface{}
+	want    *pb.CreateResponse
+	err     error
+}{
+	{
+		name:    "should return the error",
+		request: &CreateResponse{Err: fmt.Errorf("error!")},
+		want:    &pb.CreateResponse{Error: "error!"},
+	},
+	{
+		name:    "should return an error if the request has the wrong structure",
+		request: "error!",
+		want:    &pb.CreateResponse{},
+		err:     ErrInvalidResponseStructure(),
+	},
+}
+
+func TestEncodeGRPCCreateResponse(t *testing.T) {
+	t.Log("EncodeGRPCCreateResponse")
+
+	for _, testcase := range encodeGRPCCreateResponseTest {
+		t.Logf(testcase.name)
+
+		result, err := encodeGRPCCreateResponse(context.Background(), testcase.request)
 
 		assert.DeepEqual(t, result, testcase.want)
 		assert.DeepEqual(t, err, testcase.err)

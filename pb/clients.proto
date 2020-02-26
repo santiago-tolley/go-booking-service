@@ -4,6 +4,7 @@ package pb;
 service Clients {
     rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse) {};
     rpc Validate(ValidateRequest) returns (ValidateResponse) {};
+    rpc Create(CreateRequest) returns (CreateResponse) {};
 }
 
 message AuthorizeRequest {
@@ -23,4 +24,13 @@ message ValidateRequest {
 message ValidateResponse {
     string user = 1;
     string error = 2;
+}
+
+message CreateRequest {
+    string user = 1;
+    string password = 2;
+}
+
+message CreateResponse {
+    string error = 1;
 }

@@ -3,6 +3,7 @@ package server
 const (
 	InvalidRequestStructure  = "Invalid request structure"
 	InvalidResponseStructure = "Invalid response structure"
+	NoCorrelationId          = "No correlation Id in context"
 )
 
 type ErrorWithMsg struct {
@@ -19,4 +20,8 @@ func ErrInvalidRequestStructure() error {
 
 func ErrInvalidResponseStructure() error {
 	return ErrorWithMsg{InvalidResponseStructure}
+}
+
+func ErrNoCorrelationId() error {
+	return ErrorWithMsg{NoCorrelationId}
 }

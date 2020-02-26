@@ -13,28 +13,29 @@ import (
 	"go-booking-service/pkg/token"
 
 	kitlog "github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	"github.com/oklog/oklog/pkg/group"
 	"google.golang.org/grpc"
 )
 
 func main() {
-	grpcAddr := commons.ClientsGrpcAddr
-
 	logger := kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stdout))
-	errLogger := kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stderr))
+	logger = level.NewFilter(logger, commons.LoggingLevel)
+	logger = kitlog.With(logger, "origin", "Clients", "caller", kitlog.DefaultCaller)
 
 	var (
-		service    = clients.NewClientsServer(token.JWTEncoder{}, map[string]string{"John": "pass"})
+		service = clients.NewClientsServer(clients.WithEncoder(token.JWTEncoder{}),
+			clients.WithMongoDB(commons.MongoClientURL, commons.MongoClientDB))
 		endpoints  = clients.MakeEndpoints(service)
 		grpcServer = clients.NewGRPCServer(endpoints)
 	)
 
 	var g group.Group
 
-	grpcListener, err := net.Listen("tcp", grpcAddr)
+	grpcListener, err := net.Listen("tcp", commons.ClientsGrpcAddr)
 	if err != nil {
-		errLogger.Log("message", "could not set up gRPC listner", "error", err)
+		level.Error(logger).Log("transport", "gRPC", "message", "could not set up gRPC listner", "error", err)
 	}
 
 	g.Add(func() error {
@@ -59,6 +60,6 @@ func main() {
 		close(cancelInterrupt)
 	})
 
-	logger.Log("gRPC", "listening", "addr", grpcAddr)
+	level.Info(logger).Log("gRPC", "listening", "addr", commons.ClientsGrpcAddr)
 	g.Run()
 }

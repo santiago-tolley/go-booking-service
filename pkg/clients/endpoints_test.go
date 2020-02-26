@@ -114,6 +114,57 @@ func TestEndpointValidate(t *testing.T) {
 	}
 }
 
+var endpointCreateTest = []struct {
+	name           string
+	user           string
+	password       string
+	createEndpoint endpoint.Endpoint
+	err            error
+}{
+	{
+		name:     "should return the error",
+		user:     "Jhon",
+		password: "pass",
+		createEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
+			return &CreateResponse{ErrUserExists()}, nil
+		},
+		err: ErrUserExists(),
+	},
+	{
+		name:     "should return an error if the response has the wrong structure",
+		user:     "Charles",
+		password: "pass",
+		createEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
+			return ErrUserExists(), nil
+		},
+		err: ErrInvalidResponseStructure(),
+	},
+	{
+		name:     "should return an error if the endpoint returns an error",
+		user:     "Jhon",
+		password: "pass",
+		createEndpoint: func(_ context.Context, _ interface{}) (interface{}, error) {
+			return nil, ErrInvalidCredentials()
+		},
+		err: ErrInvalidCredentials(),
+	},
+}
+
+func TestEndpointCreate(t *testing.T) {
+	t.Log("EndpointCreate")
+
+	for _, testcase := range endpointCreateTest {
+		t.Logf(testcase.name)
+
+		endpointMock := Endpoints{
+			CreateEndpoint: testcase.createEndpoint,
+		}
+		err := endpointMock.Create(context.Background(), testcase.user, testcase.password)
+
+		assert.DeepEqual(t, err, testcase.err)
+	}
+}
+
 type mockCorrectClientsService struct{}
 
 func (m mockCorrectClientsService) Authorize(ctx context.Context, user, password string) (string, error) {
@@ -122,6 +173,10 @@ func (m mockCorrectClientsService) Authorize(ctx context.Context, user, password
 
 func (m mockCorrectClientsService) Validate(ctx context.Context, token string) (string, error) {
 	return "Jhon", nil
+}
+
+func (m mockCorrectClientsService) Create(ctx context.Context, user, password string) error {
+	return ErrUserExists()
 }
 
 type mockErrorClientsService struct{}
@@ -134,9 +189,13 @@ func (m mockErrorClientsService) Validate(ctx context.Context, token string) (st
 	return "", ErrUserNotFound()
 }
 
+func (m mockErrorClientsService) Create(ctx context.Context, user, password string) error {
+	return ErrInvalidCredentials()
+}
+
 var makeAuthorizeEndpointTest = []struct {
 	name    string
-	client  ClientsService
+	client  Service
 	request interface{}
 	want    *AuthorizeResponse
 	err     error
@@ -178,7 +237,7 @@ func TestMakeAuthorizeEndpoint(t *testing.T) {
 
 var makeValidateEndpointTest = []struct {
 	name    string
-	client  ClientsService
+	client  Service
 	request interface{}
 	want    *ValidateResponse
 	err     error
@@ -211,6 +270,48 @@ func TestMakeValidateEndpoint(t *testing.T) {
 		t.Logf(testcase.name)
 
 		endpoint := MakeValidateEndpoint(testcase.client)
+		result, err := endpoint(context.Background(), testcase.request)
+
+		assert.DeepEqual(t, result, testcase.want)
+		assert.DeepEqual(t, err, testcase.err)
+	}
+}
+
+var makeCreateEndpointTest = []struct {
+	name    string
+	client  Service
+	request interface{}
+	want    *CreateResponse
+	err     error
+}{
+	{
+		name:    "should return the user",
+		client:  mockCorrectClientsService{},
+		request: &CreateRequest{},
+		want:    &CreateResponse{ErrUserExists()},
+	},
+	{
+		name:    "should return an error if the request has the wrong structure",
+		client:  mockCorrectClientsService{},
+		request: "jjj.www.ttt",
+		want:    &CreateResponse{},
+		err:     ErrInvalidRequestStructure(),
+	},
+	{
+		name:    "should return an error if the endpoint returns an error",
+		client:  mockErrorClientsService{},
+		request: &CreateRequest{},
+		want:    &CreateResponse{ErrInvalidCredentials()},
+	},
+}
+
+func TestMakeCreateEndpoint(t *testing.T) {
+	t.Log("MakeCreateEndpoint")
+
+	for _, testcase := range makeCreateEndpointTest {
+		t.Logf(testcase.name)
+
+		endpoint := MakeCreateEndpoint(testcase.client)
 		result, err := endpoint(context.Background(), testcase.request)
 
 		assert.DeepEqual(t, result, testcase.want)
